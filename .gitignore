@@ -1,0 +1,33 @@
+# Dependencies
+node_modules/
+*/node_modules/
+
+# Build output
+dist/
+dist-electron/
+release/
+release-backups/
+out/
+*.blockmap
+*.exe
+*.zip
+
+# Local generated media and handoff files
+ads/
+.impeccable/
+ads/**/out/
+ads/**/public/real-product/
+new-chat-handoff-*.md
+new-chat-handoff-*.json
+
+# Logs and caches
+*.log
+.cache/
+.vite/
+.remotion/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

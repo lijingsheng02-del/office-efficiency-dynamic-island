@@ -1,0 +1,79 @@
+{
+  "name": "dynamic-island-electron",
+  "version": "1.0.91",
+  "description": "Windows desktop Dynamic Island MVP built with Electron, React, TypeScript, and Vite.",
+  "private": true,
+  "main": "dist-electron/main.js",
+  "author": "Codex",
+  "license": "MIT",
+  "scripts": {
+    "dev": "tsc -p tsconfig.electron.json && concurrently -k \"vite --host 127.0.0.1\" \"tsc -p tsconfig.electron.json --watch --preserveWatchOutput\" \"wait-on http://127.0.0.1:5173 dist-electron/main.js && electron .\"",
+    "build:electron": "tsc -p tsconfig.electron.json",
+    "build:renderer": "vite build",
+    "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.electron.json",
+    "build": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.electron.json && vite build && tsc -p tsconfig.electron.json",
+    "dist": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.electron.json && vite build && tsc -p tsconfig.electron.json && electron-builder --win",
+    "preview": "vite preview --host 127.0.0.1"
+  },
+  "dependencies": {
+    "@dnd-kit/core": "^6.3.1",
+    "@dnd-kit/sortable": "^10.0.0",
+    "@dnd-kit/utilities": "^3.2.2",
+    "koffi": "^2.16.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.29",
+    "@types/react": "^19.1.6",
+    "@types/react-dom": "^19.1.5",
+    "@vitejs/plugin-react": "^4.5.2",
+    "concurrently": "^9.1.2",
+    "electron": "^42.3.2",
+    "electron-builder": "^26.0.12",
+    "framer-motion": "^12.18.1",
+    "npm": "^11.16.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "typescript": "^5.8.3",
+    "vite": "^6.3.5",
+    "wait-on": "^8.0.3"
+  },
+  "build": {
+    "appId": "com.codex.dynamicisland",
+    "productName": "Dynamic Island",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "dist-electron/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "artifactName": "${productName} Setup ${version}.${ext}",
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Dynamic Island"
+    },
+    "portable": {
+      "artifactName": "${productName} Portable ${version}.${ext}"
+    }
+  }
+}
