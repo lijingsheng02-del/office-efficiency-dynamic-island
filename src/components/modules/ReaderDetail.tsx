@@ -87,12 +87,12 @@ export function ReaderDetail({
           </button>
         </div>
 
-        {readerLevel !== 'library' ? (
+        {readerLevel === 'toc' ? (
           <div className="reader-step-nav" aria-label="阅读层级">
-            <button type="button" className={readerLevel === 'toc' ? 'active' : ''} onClick={() => setReaderLevel('toc')}>
+            <button type="button" className="active" onClick={() => setReaderLevel('toc')}>
               目录
             </button>
-            <button type="button" className={readerLevel === 'content' ? 'active' : ''} disabled={!hasBook} onClick={() => setReaderLevel('content')}>
+            <button type="button" disabled={!hasBook} onClick={() => setReaderLevel('content')}>
               正文
             </button>
           </div>
@@ -168,7 +168,7 @@ export function ReaderDetail({
         ) : null}
 
         {readerLevel === 'content' ? (
-          <>
+          <div className="reader-content-panel">
             <div className="reader-path-row">
               <button type="button" className="reader-link-button" onClick={() => setReaderLevel('toc')}>
                 ‹ 目录
@@ -196,22 +196,17 @@ export function ReaderDetail({
               </button>
             </div>
 
-            <div className="setting-row compact-setting">
-              <span className="truncate">每页字数</span>
-              <div className="segmented reader-chars-segmented">
+            <div className="reader-content-options">
+              <span>每页字数</span>
+              <select value={reader.charsPerPage} onChange={(event) => onChangeCharsPerPage(Number(event.target.value))}>
                 {CHARS_OPTIONS.map((option) => (
-                  <button
-                    type="button"
-                    key={option}
-                    className={reader.charsPerPage === option ? 'active' : ''}
-                    onClick={() => onChangeCharsPerPage(option)}
-                  >
+                  <option key={option} value={option}>
                     {option}
-                  </button>
+                  </option>
                 ))}
-              </div>
+              </select>
             </div>
-          </>
+          </div>
         ) : null}
       </article>
     </DetailShell>
