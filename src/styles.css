@@ -2584,7 +2584,7 @@ textarea[aria-invalid="true"] {
 
 .reader-step-nav {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 3px;
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 999px;

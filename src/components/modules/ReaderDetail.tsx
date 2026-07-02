@@ -87,17 +87,16 @@ export function ReaderDetail({
           </button>
         </div>
 
-        <div className="reader-step-nav" aria-label="阅读层级">
-          <button type="button" className={readerLevel === 'library' ? 'active' : ''} onClick={() => setReaderLevel('library')}>
-            书库
-          </button>
-          <button type="button" className={readerLevel === 'toc' ? 'active' : ''} disabled={!reader.currentBookId} onClick={() => setReaderLevel('toc')}>
-            目录
-          </button>
-          <button type="button" className={readerLevel === 'content' ? 'active' : ''} disabled={!hasBook} onClick={() => setReaderLevel('content')}>
-            正文
-          </button>
-        </div>
+        {readerLevel !== 'library' ? (
+          <div className="reader-step-nav" aria-label="阅读层级">
+            <button type="button" className={readerLevel === 'toc' ? 'active' : ''} onClick={() => setReaderLevel('toc')}>
+              目录
+            </button>
+            <button type="button" className={readerLevel === 'content' ? 'active' : ''} disabled={!hasBook} onClick={() => setReaderLevel('content')}>
+              正文
+            </button>
+          </div>
+        ) : null}
 
         {readerLevel === 'library' ? (
           <div className="reader-level-panel">
