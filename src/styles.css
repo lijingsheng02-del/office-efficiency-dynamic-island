@@ -1818,7 +1818,7 @@ textarea[aria-invalid="true"] {
   color: rgba(255, 255, 255, 0.78);
   font-size: 14px;
   line-height: 1.75;
-  white-space: normal;
+  white-space: pre-wrap;
   word-break: break-word;
 }
 
@@ -2549,6 +2549,24 @@ textarea[aria-invalid="true"] {
   scrollbar-width: thin;
 }
 
+.reader-level-panel {
+  display: flex;
+  min-height: 0;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.reader-library-list,
+.reader-chapter-list {
+  display: grid;
+  min-height: 0;
+  max-height: 300px;
+  gap: 8px;
+  overflow: auto;
+  padding-right: 2px;
+  scrollbar-width: thin;
+}
+
 .reader-book-option {
   display: grid;
   min-width: 0;
@@ -2592,6 +2610,93 @@ textarea[aria-invalid="true"] {
   line-height: 1;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.reader-path-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  color: rgba(255, 255, 255, 0.58);
+  font-size: 11px;
+}
+
+.reader-link-button {
+  min-width: 0;
+  height: 26px;
+  border-radius: 999px;
+  padding: 0 10px;
+  background: rgba(255, 255, 255, 0.09);
+  color: rgba(255, 255, 255, 0.78);
+  cursor: pointer;
+  font-size: 11px;
+  line-height: 1;
+  transition:
+    background 160ms ease,
+    color 160ms ease,
+    transform 160ms ease;
+}
+
+.reader-link-button:hover {
+  background: rgba(255, 255, 255, 0.15);
+  transform: translateY(-1px);
+}
+
+.reader-resume-option,
+.reader-chapter-option {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 13px;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.065);
+  color: rgba(255, 255, 255, 0.86);
+  cursor: pointer;
+  text-align: left;
+  transition:
+    background 160ms ease,
+    border-color 160ms ease,
+    transform 160ms ease;
+}
+
+.reader-resume-option:hover,
+.reader-chapter-option:hover {
+  border-color: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.105);
+  transform: translateY(-1px);
+}
+
+.reader-resume-option span,
+.reader-chapter-option span {
+  min-width: 0;
+  overflow: hidden;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.reader-resume-option em,
+.reader-chapter-option em {
+  color: rgba(255, 255, 255, 0.48);
+  font-size: 10px;
+  font-style: normal;
+  line-height: 1;
+}
+
+.reader-empty-state {
+  margin: 0;
+  border: 1px dashed rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  padding: 18px 14px;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 12px;
+  line-height: 1.55;
 }
 
 .reader-page {
@@ -3924,6 +4029,42 @@ textarea[aria-invalid="true"] {
 
 :root[data-theme="light"] .reader-book-option em {
   color: rgba(20, 24, 31, 0.5);
+}
+
+:root[data-theme="light"] .reader-path-row {
+  color: rgba(20, 24, 31, 0.5);
+}
+
+:root[data-theme="light"] .reader-link-button {
+  background: rgba(20, 24, 31, 0.08);
+  color: rgba(20, 24, 31, 0.72);
+}
+
+:root[data-theme="light"] .reader-link-button:hover {
+  background: rgba(20, 24, 31, 0.12);
+}
+
+:root[data-theme="light"] .reader-resume-option,
+:root[data-theme="light"] .reader-chapter-option {
+  border-color: rgba(22, 30, 46, 0.08);
+  background: rgba(22, 30, 46, 0.055);
+  color: rgba(20, 24, 31, 0.84);
+}
+
+:root[data-theme="light"] .reader-resume-option:hover,
+:root[data-theme="light"] .reader-chapter-option:hover {
+  border-color: rgba(22, 30, 46, 0.16);
+  background: rgba(22, 30, 46, 0.085);
+}
+
+:root[data-theme="light"] .reader-resume-option em,
+:root[data-theme="light"] .reader-chapter-option em {
+  color: rgba(20, 24, 31, 0.5);
+}
+
+:root[data-theme="light"] .reader-empty-state {
+  border-color: rgba(22, 30, 46, 0.12);
+  color: rgba(20, 24, 31, 0.52);
 }
 
 :root[data-theme="light"] .compact-photo-carousel {

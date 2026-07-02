@@ -11,12 +11,19 @@ type ReaderBookState = {
   exists: boolean;
 };
 
+type ReaderChapter = {
+  id: string;
+  title: string;
+  position: number;
+};
+
 type ReaderState = {
   currentBookId: string;
   books: ReaderBookState[];
   filePath: string;
   title: string;
   text: string;
+  chapters: ReaderChapter[];
   position: number;
   charsPerPage: number;
 };

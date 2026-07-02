@@ -93,6 +93,12 @@ type ReaderStatePatch = {
   charsPerPage?: number;
 };
 
+type ReaderChapter = {
+  id: string;
+  title: string;
+  position: number;
+};
+
 type PlanReminderPayload = {
   id: string;
   text: string;
@@ -903,7 +909,44 @@ function decodeTextFile(filePath: string) {
 }
 
 function normalizeBookText(text: string) {
-  return text.replace(/\r\n/g, '\n').replace(/\r/g, '\n').replace(/\s+/g, ' ').trim();
+  return text
+    .replace(/\r\n/g, '\n')
+    .replace(/\r/g, '\n')
+    .replace(/\t/g, ' ')
+    .replace(/[ \u00a0]+/g, ' ')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
+function isLikelyChapterTitle(line: string) {
+  const title = line.trim().replace(/\s+/g, ' ');
+  if (!title || title.length > 64) return false;
+
+  return (
+    /^第\s*[0-9０-９一二三四五六七八九十百千万零〇两]+\s*[章节回卷集部篇].{0,40}$/.test(title) ||
+    /^(序章|楔子|引子|前言|尾声|后记)(\s|$|[:：-]).{0,40}$/.test(title) ||
+    /^番外.{0,40}$/.test(title) ||
+    /^chapter\s+[0-9ivxlcdm]+.{0,40}$/i.test(title)
+  );
+}
+
+function extractReaderChapters(text: string): ReaderChapter[] {
+  const chapters: ReaderChapter[] = [];
+  let position = 0;
+
+  for (const line of text.split('\n')) {
+    const title = line.trim().replace(/\s+/g, ' ');
+    if (isLikelyChapterTitle(title)) {
+      chapters.push({
+        id: String(position),
+        title,
+        position,
+      });
+    }
+    position += line.length + 1;
+  }
+
+  return chapters.slice(0, 500);
 }
 
 function getReaderPayload(state = loadReaderDiskState()) {
@@ -921,6 +964,7 @@ function getReaderPayload(state = loadReaderDiskState()) {
       filePath: '',
       title: '',
       text: '',
+      chapters: [],
       position: 0,
       charsPerPage: 120,
     };
@@ -933,12 +977,14 @@ function getReaderPayload(state = loadReaderDiskState()) {
       filePath: currentBook.filePath,
       title: currentBook.title,
       text: '',
+      chapters: [],
       position: currentBook.position,
       charsPerPage: currentBook.charsPerPage,
     };
   }
 
   const text = normalizeBookText(decodeTextFile(currentBook.filePath));
+  const chapters = extractReaderChapters(text);
   const position = Math.min(currentBook.position, Math.max(0, text.length - 1));
 
   return {
@@ -949,6 +995,7 @@ function getReaderPayload(state = loadReaderDiskState()) {
     title: currentBook.title,
     charsPerPage: currentBook.charsPerPage,
     text,
+    chapters,
   };
 }
 

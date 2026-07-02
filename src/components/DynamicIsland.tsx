@@ -52,12 +52,19 @@ export type ReaderBookState = {
   exists: boolean;
 };
 
+export type ReaderChapter = {
+  id: string;
+  title: string;
+  position: number;
+};
+
 export type ReaderState = {
   currentBookId: string;
   books: ReaderBookState[];
   filePath: string;
   title: string;
   text: string;
+  chapters: ReaderChapter[];
   position: number;
   charsPerPage: number;
 };
@@ -111,7 +118,7 @@ type DragState = {
   dragging: boolean;
 };
 
-const EMPTY_READER: ReaderState = { currentBookId: '', books: [], filePath: '', title: '', text: '', position: 0, charsPerPage: 120 };
+const EMPTY_READER: ReaderState = { currentBookId: '', books: [], filePath: '', title: '', text: '', chapters: [], position: 0, charsPerPage: 120 };
 const EMPTY_VIDEO_WALLPAPER: VideoWallpaperState = {
   enabled: false,
   filePath: '',
@@ -614,6 +621,7 @@ export function DynamicIsland() {
 
   const previousPage = () => updateReader((current) => ({ ...current, position: clampPosition(current.position - current.charsPerPage, current.text.length) }));
   const nextPage = () => updateReader((current) => ({ ...current, position: clampPosition(current.position + current.charsPerPage, current.text.length) }));
+  const jumpToReaderPosition = (position: number) => updateReader((current) => ({ ...current, position: clampPosition(position, current.text.length) }));
   const changeCharsPerPage = (charsPerPage: number) => updateReader((current) => ({ ...current, charsPerPage, position: clampPosition(current.position, current.text.length) }));
   const goDashboard = () => setActiveModule('dashboard');
 
@@ -694,6 +702,7 @@ export function DynamicIsland() {
           readerProgress={readerProgress}
           onOpenReaderFile={openReaderFile}
           onSelectBook={selectReaderBook}
+          onJumpToPosition={jumpToReaderPosition}
           onPreviousPage={previousPage}
           onNextPage={nextPage}
           onChangeCharsPerPage={changeCharsPerPage}
