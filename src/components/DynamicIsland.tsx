@@ -41,7 +41,20 @@ type PlanReminder = {
   order: number;
 };
 
+export type ReaderBookState = {
+  id: string;
+  filePath: string;
+  title: string;
+  position: number;
+  charsPerPage: number;
+  addedAt: string;
+  updatedAt: string;
+  exists: boolean;
+};
+
 export type ReaderState = {
+  currentBookId: string;
+  books: ReaderBookState[];
   filePath: string;
   title: string;
   text: string;
@@ -98,7 +111,7 @@ type DragState = {
   dragging: boolean;
 };
 
-const EMPTY_READER: ReaderState = { filePath: '', title: '', text: '', position: 0, charsPerPage: 120 };
+const EMPTY_READER: ReaderState = { currentBookId: '', books: [], filePath: '', title: '', text: '', position: 0, charsPerPage: 120 };
 const EMPTY_VIDEO_WALLPAPER: VideoWallpaperState = {
   enabled: false,
   filePath: '',
@@ -215,6 +228,31 @@ function clampPercent(value: number) {
 function getReaderProgress(reader: ReaderState) {
   if (!reader.text.length) return 0;
   return Math.min(100, Math.max(0, Math.round((reader.position / reader.text.length) * 100)));
+}
+
+function normalizeReaderForUi(state: ReaderState): ReaderState {
+  const next = { ...EMPTY_READER, ...state, books: state.books ?? [] };
+  return {
+    ...next,
+    position: clampPosition(next.position, next.text.length),
+  };
+}
+
+function syncCurrentBookProgress(reader: ReaderState): ReaderState {
+  if (!reader.currentBookId) return reader;
+
+  return {
+    ...reader,
+    books: reader.books.map((book) =>
+      book.id === reader.currentBookId
+        ? {
+            ...book,
+            position: reader.position,
+            charsPerPage: reader.charsPerPage,
+          }
+        : book,
+    ),
+  };
 }
 
 function getStatusText(activeModule: ModuleKey, reader: ReaderState, readerProgress: number, photos: IslandPhoto[]) {
@@ -440,7 +478,7 @@ export function DynamicIsland() {
       }
     });
     void window.islandApi?.getReaderState().then((state) => {
-      setReader({ ...EMPTY_READER, ...state, position: clampPosition(state.position, state.text.length) });
+      setReader(normalizeReaderForUi(state));
     });
     void window.photoAPI?.getPhotos().then(setPhotos);
     void window.photoAPI?.getFilterMode().then(setPhotoFilterMode);
@@ -484,12 +522,17 @@ export function DynamicIsland() {
 
   const persistReader = (nextReader: ReaderState) => {
     if (!nextReader.filePath) return;
-    void window.islandApi?.saveReaderState({ filePath: nextReader.filePath, position: nextReader.position, charsPerPage: nextReader.charsPerPage });
+    void window.islandApi?.saveReaderState({
+      currentBookId: nextReader.currentBookId,
+      filePath: nextReader.filePath,
+      position: nextReader.position,
+      charsPerPage: nextReader.charsPerPage,
+    });
   };
 
   const updateReader = (updater: (current: ReaderState) => ReaderState) => {
     setReader((current) => {
-      const next = updater(current);
+      const next = syncCurrentBookProgress(updater(current));
       persistReader(next);
       return next;
     });
@@ -498,9 +541,15 @@ export function DynamicIsland() {
   const openReaderFile = async () => {
     const state = await window.islandApi?.openReaderFile();
     if (!state) return;
-    setReader({ ...EMPTY_READER, ...state, position: clampPosition(state.position, state.text.length) });
+    setReader(normalizeReaderForUi(state));
     setActiveModule('reader');
     setExpanded(true);
+  };
+
+  const selectReaderBook = async (bookId: string) => {
+    const state = await window.islandApi?.selectReaderBook(bookId);
+    if (!state) return;
+    setReader(normalizeReaderForUi(state));
   };
 
   const addPhotos = async () => {
@@ -644,6 +693,7 @@ export function DynamicIsland() {
           readerPageText={readerPageText}
           readerProgress={readerProgress}
           onOpenReaderFile={openReaderFile}
+          onSelectBook={selectReaderBook}
           onPreviousPage={previousPage}
           onNextPage={nextPage}
           onChangeCharsPerPage={changeCharsPerPage}

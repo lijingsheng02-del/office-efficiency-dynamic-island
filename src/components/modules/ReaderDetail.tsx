@@ -7,6 +7,7 @@ type ReaderDetailProps = {
   readerPageText: string;
   readerProgress: number;
   onOpenReaderFile: () => void;
+  onSelectBook: (bookId: string) => void;
   onPreviousPage: () => void;
   onNextPage: () => void;
   onChangeCharsPerPage: (charsPerPage: number) => void;
@@ -21,13 +22,16 @@ export function ReaderDetail({
   readerPageText,
   readerProgress,
   onOpenReaderFile,
+  onSelectBook,
   onPreviousPage,
   onNextPage,
   onChangeCharsPerPage,
   onBack,
   onClose,
 }: ReaderDetailProps) {
-  const hasBook = Boolean(reader.text);
+  const hasBook = Boolean(reader.filePath && reader.text);
+  const hasLibrary = reader.books.length > 0;
+  const emptyMessage = reader.filePath ? '当前书籍文件不存在或无法读取，请选择其他书籍或重新导入。' : '点击“导入书籍”添加小说文本，支持一次选择多本。';
 
   const handleWheel = (event: WheelEvent<HTMLElement>) => {
     if (!hasBook) return;
@@ -42,15 +46,32 @@ export function ReaderDetail({
         <div className="reader-card-header">
           <div className="card-copy">
             <span className="eyebrow">当前书籍</span>
-            <strong className="truncate">{hasBook ? reader.title : '还没有选择小说文件'}</strong>
+            <strong className="truncate">{reader.title || '还没有选择小说文件'}</strong>
           </div>
           <button type="button" className="small-action" onClick={onOpenReaderFile}>
-            选择文件
+            导入书籍
           </button>
         </div>
 
+        {hasLibrary ? (
+          <div className="reader-library" aria-label="已导入书籍">
+            {reader.books.map((book) => (
+              <button
+                type="button"
+                key={book.id}
+                className={`reader-book-option ${book.id === reader.currentBookId ? 'active' : ''}`}
+                onClick={() => onSelectBook(book.id)}
+                title={book.filePath}
+              >
+                <span className="truncate">{book.title}</span>
+                <em>{book.exists ? (book.id === reader.currentBookId ? '正在阅读' : '点击阅读') : '文件丢失'}</em>
+              </button>
+            ))}
+          </div>
+        ) : null}
+
         <p className={`reader-detail-page ${hasBook ? '' : 'empty'}`}>
-          {hasBook ? readerPageText || '这一页暂时没有内容。' : '点击“选择文件”导入小说文本，支持常见文本编码。'}
+          {hasBook ? readerPageText || '这一页暂时没有内容。' : emptyMessage}
         </p>
 
         <div className="reader-progress">

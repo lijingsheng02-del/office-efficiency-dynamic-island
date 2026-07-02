@@ -37,7 +37,20 @@ type DashboardModuleKey =
   | 'author-support'
   | 'settings';
 
+type ReaderBookState = {
+  id: string;
+  filePath: string;
+  title: string;
+  position: number;
+  charsPerPage: number;
+  addedAt: string;
+  updatedAt: string;
+  exists: boolean;
+};
+
 type ReaderState = {
+  currentBookId: string;
+  books: ReaderBookState[];
   filePath: string;
   title: string;
   text: string;
@@ -46,7 +59,8 @@ type ReaderState = {
 };
 
 type ReaderDiskState = {
-  filePath: string;
+  currentBookId?: string;
+  filePath?: string;
   position: number;
   charsPerPage: number;
 };
@@ -198,6 +212,7 @@ const islandApi = {
   markWelcomeSeen: () => ipcRenderer.invoke('mark-welcome-seen') as Promise<boolean>,
   getReaderState: () => ipcRenderer.invoke('get-reader-state') as Promise<ReaderState>,
   openReaderFile: () => ipcRenderer.invoke('open-reader-file') as Promise<ReaderState>,
+  selectReaderBook: (bookId: string) => ipcRenderer.invoke('select-reader-book', bookId) as Promise<ReaderState>,
   saveReaderState: (state: ReaderDiskState) => ipcRenderer.invoke('save-reader-state', state) as Promise<ReaderDiskState>,
   quitApp: () => ipcRenderer.invoke('quit-app'),
   onAlwaysOnTopChanged: (callback: (enabled: boolean) => void) => {

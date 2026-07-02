@@ -71,10 +71,26 @@ type ScreenPoint = {
   y: number;
 };
 
-type ReaderDiskState = {
+type ReaderBookDiskState = {
+  id: string;
   filePath: string;
+  title: string;
   position: number;
   charsPerPage: number;
+  addedAt: string;
+  updatedAt: string;
+};
+
+type ReaderDiskState = {
+  currentBookId: string;
+  books: ReaderBookDiskState[];
+};
+
+type ReaderStatePatch = {
+  currentBookId?: string;
+  filePath?: string;
+  position?: number;
+  charsPerPage?: number;
 };
 
 type PlanReminderPayload = {
@@ -105,9 +121,8 @@ type AppSettings = {
 };
 
 const DEFAULT_READER_STATE: ReaderDiskState = {
-  filePath: '',
-  position: 0,
-  charsPerPage: 120,
+  currentBookId: '',
+  books: [],
 };
 
 const DEFAULT_APP_SETTINGS: AppSettings = {
@@ -756,14 +771,84 @@ function getLegacyReaderStatePath() {
   return 'C:\\works\\taskbar-novel-reader\\reader-state.json';
 }
 
-function normalizeReaderState(value: Partial<ReaderDiskState> | null | undefined): ReaderDiskState {
+function clampReaderCharsPerPage(value: unknown) {
+  const numeric = Number(value);
+  return Math.max(120, Math.min(600, Number.isFinite(numeric) ? numeric : 120));
+}
+
+function normalizeBookId(filePath: string) {
+  return path.normalize(filePath);
+}
+
+function getBookTitle(filePath: string) {
+  return path.basename(filePath, path.extname(filePath));
+}
+
+function normalizeReaderBook(value: Partial<ReaderBookDiskState> & { FilePath?: string; Position?: number; CharsPerPage?: number }, now: string) {
+  const filePath = typeof value.filePath === 'string' ? value.filePath : typeof value.FilePath === 'string' ? value.FilePath : '';
+  if (!filePath) return null;
+  const id = typeof value.id === 'string' && value.id ? value.id : normalizeBookId(filePath);
+
   return {
-    filePath: typeof value?.filePath === 'string' ? value.filePath : DEFAULT_READER_STATE.filePath,
-    position: Math.max(0, Number.isFinite(value?.position) ? Number(value?.position) : DEFAULT_READER_STATE.position),
-    charsPerPage: Math.max(
-      120,
-      Math.min(600, Number.isFinite(value?.charsPerPage) ? Number(value?.charsPerPage) : DEFAULT_READER_STATE.charsPerPage),
-    ),
+    id,
+    filePath,
+    title: typeof value.title === 'string' && value.title ? value.title : getBookTitle(filePath),
+    position: Math.max(0, Number.isFinite(value.position ?? value.Position) ? Number(value.position ?? value.Position) : 0),
+    charsPerPage: clampReaderCharsPerPage(value.charsPerPage ?? value.CharsPerPage),
+    addedAt: typeof value.addedAt === 'string' && value.addedAt ? value.addedAt : now,
+    updatedAt: typeof value.updatedAt === 'string' && value.updatedAt ? value.updatedAt : now,
+  };
+}
+
+function normalizeReaderState(
+  value:
+    | (Partial<ReaderDiskState> &
+        Partial<ReaderStatePatch> & {
+          FilePath?: string;
+          Position?: number;
+          CharsPerPage?: number;
+        })
+    | null
+    | undefined,
+): ReaderDiskState {
+  const now = new Date().toISOString();
+  const books: ReaderBookDiskState[] = [];
+  const seen = new Set<string>();
+
+  const addBook = (book: ReaderBookDiskState | null) => {
+    if (!book) return;
+    const dedupeKey = book.id.toLowerCase();
+    if (seen.has(dedupeKey)) return;
+    seen.add(dedupeKey);
+    books.push(book);
+  };
+
+  if (Array.isArray(value?.books)) {
+    value.books.forEach((book) => addBook(normalizeReaderBook(book, now)));
+  } else {
+    addBook(
+      normalizeReaderBook(
+        {
+          filePath: value?.filePath ?? value?.FilePath,
+          position: value?.position ?? value?.Position,
+          charsPerPage: value?.charsPerPage ?? value?.CharsPerPage,
+        },
+        now,
+      ),
+    );
+  }
+
+  const requestedCurrentBookId =
+    typeof value?.currentBookId === 'string' && value.currentBookId
+      ? value.currentBookId
+      : typeof value?.filePath === 'string'
+        ? normalizeBookId(value.filePath)
+        : '';
+  const currentBookId = books.some((book) => book.id === requestedCurrentBookId) ? requestedCurrentBookId : books[0]?.id ?? '';
+
+  return {
+    currentBookId,
+    books,
   };
 }
 
@@ -771,17 +856,14 @@ function readJsonState(filePath: string): ReaderDiskState | null {
   if (!fs.existsSync(filePath)) return null;
 
   try {
-    const parsed = JSON.parse(fs.readFileSync(filePath, 'utf8')) as Partial<ReaderDiskState> & {
+    const parsed = JSON.parse(fs.readFileSync(filePath, 'utf8')) as Partial<ReaderDiskState> &
+      Partial<ReaderStatePatch> & {
       FilePath?: string;
       Position?: number;
       CharsPerPage?: number;
     };
 
-    return normalizeReaderState({
-      filePath: parsed.filePath ?? parsed.FilePath ?? '',
-      position: parsed.position ?? parsed.Position ?? 0,
-      charsPerPage: parsed.charsPerPage ?? parsed.CharsPerPage ?? DEFAULT_READER_STATE.charsPerPage,
-    });
+    return normalizeReaderState(parsed);
   } catch {
     return null;
   }
@@ -826,24 +908,46 @@ function normalizeBookText(text: string) {
 
 function getReaderPayload(state = loadReaderDiskState()) {
   const normalized = normalizeReaderState(state);
+  const currentBook = normalized.books.find((book) => book.id === normalized.currentBookId) ?? null;
+  const books = normalized.books.map((book) => ({
+    ...book,
+    exists: fs.existsSync(book.filePath),
+  }));
 
-  if (!normalized.filePath || !fs.existsSync(normalized.filePath)) {
+  if (!currentBook) {
     return {
-      ...normalized,
+      currentBookId: '',
+      books,
       filePath: '',
       title: '',
       text: '',
       position: 0,
+      charsPerPage: 120,
     };
   }
 
-  const text = normalizeBookText(decodeTextFile(normalized.filePath));
-  const position = Math.min(normalized.position, Math.max(0, text.length - 1));
+  if (!fs.existsSync(currentBook.filePath)) {
+    return {
+      currentBookId: currentBook.id,
+      books,
+      filePath: currentBook.filePath,
+      title: currentBook.title,
+      text: '',
+      position: currentBook.position,
+      charsPerPage: currentBook.charsPerPage,
+    };
+  }
+
+  const text = normalizeBookText(decodeTextFile(currentBook.filePath));
+  const position = Math.min(currentBook.position, Math.max(0, text.length - 1));
 
   return {
-    ...normalized,
+    currentBookId: currentBook.id,
+    books: books.map((book) => (book.id === currentBook.id ? { ...book, position, charsPerPage: currentBook.charsPerPage } : book)),
+    filePath: currentBook.filePath,
     position,
-    title: path.basename(normalized.filePath, path.extname(normalized.filePath)),
+    title: currentBook.title,
+    charsPerPage: currentBook.charsPerPage,
     text,
   };
 }
@@ -1288,8 +1392,8 @@ ipcMain.handle('open-reader-file', async () => {
   let result;
   try {
     result = await dialog.showOpenDialog(mainWindow, {
-      title: '\u6253\u5f00 TXT \u5c0f\u8bf4',
-      properties: ['openFile'],
+      title: '\u5bfc\u5165 TXT \u5c0f\u8bf4',
+      properties: ['openFile', 'multiSelections'],
       filters: [
         { name: 'Text files', extensions: ['txt'] },
         { name: 'All files', extensions: ['*'] },
@@ -1303,17 +1407,73 @@ ipcMain.handle('open-reader-file', async () => {
     return getReaderPayload();
   }
 
+  const currentState = loadReaderDiskState();
+  const now = new Date().toISOString();
+  const booksById = new Map(currentState.books.map((book) => [book.id.toLowerCase(), book]));
+  const firstImportedId = normalizeBookId(result.filePaths[0]);
+  const currentBook = currentState.books.find((book) => book.id === currentState.currentBookId);
+  const defaultCharsPerPage = currentBook?.charsPerPage ?? currentState.books[0]?.charsPerPage ?? 120;
+
+  result.filePaths.forEach((filePath) => {
+    const id = normalizeBookId(filePath);
+    const key = id.toLowerCase();
+    const existingBook = booksById.get(key);
+    booksById.set(key, {
+      id,
+      filePath,
+      title: getBookTitle(filePath),
+      position: existingBook?.position ?? 0,
+      charsPerPage: existingBook?.charsPerPage ?? defaultCharsPerPage,
+      addedAt: existingBook?.addedAt ?? now,
+      updatedAt: now,
+    });
+  });
+
   const state = saveReaderDiskState({
-    filePath: result.filePaths[0],
-    position: 0,
-    charsPerPage: loadReaderDiskState().charsPerPage,
+    currentBookId: firstImportedId,
+    books: Array.from(booksById.values()),
   });
 
   return getReaderPayload(state);
 });
 
-ipcMain.handle('save-reader-state', (_event, state: ReaderDiskState) => {
-  return saveReaderDiskState(state);
+ipcMain.handle('select-reader-book', (_event, bookId: string) => {
+  const currentState = loadReaderDiskState();
+  const selectedBook = currentState.books.find((book) => book.id === bookId);
+  if (!selectedBook) return getReaderPayload(currentState);
+  const state = saveReaderDiskState({ ...currentState, currentBookId: selectedBook.id });
+  return getReaderPayload(state);
+});
+
+ipcMain.handle('save-reader-state', (_event, patch: ReaderStatePatch) => {
+  const currentState = loadReaderDiskState();
+  const bookId =
+    typeof patch.currentBookId === 'string' && patch.currentBookId
+      ? patch.currentBookId
+      : typeof patch.filePath === 'string' && patch.filePath
+        ? normalizeBookId(patch.filePath)
+        : currentState.currentBookId;
+  const existingBook = currentState.books.find((book) => book.id === bookId);
+  if (!existingBook && !patch.filePath) return saveReaderDiskState(currentState);
+
+  const now = new Date().toISOString();
+  const nextBook: ReaderBookDiskState = {
+    id: existingBook?.id ?? normalizeBookId(patch.filePath ?? ''),
+    filePath: existingBook?.filePath ?? patch.filePath ?? '',
+    title: existingBook?.title ?? getBookTitle(patch.filePath ?? ''),
+    position: Math.max(0, Number.isFinite(Number(patch.position)) ? Number(patch.position) : existingBook?.position ?? 0),
+    charsPerPage: clampReaderCharsPerPage(patch.charsPerPage ?? existingBook?.charsPerPage),
+    addedAt: existingBook?.addedAt ?? now,
+    updatedAt: now,
+  };
+  const books = existingBook
+    ? currentState.books.map((book) => (book.id === nextBook.id ? nextBook : book))
+    : [...currentState.books, nextBook];
+
+  return saveReaderDiskState({
+    currentBookId: nextBook.id,
+    books,
+  });
 });
 
 ipcMain.handle('daily-plan:get-today', () => {

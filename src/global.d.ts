@@ -1,6 +1,19 @@
 ﻿export {};
 
+type ReaderBookState = {
+  id: string;
+  filePath: string;
+  title: string;
+  position: number;
+  charsPerPage: number;
+  addedAt: string;
+  updatedAt: string;
+  exists: boolean;
+};
+
 type ReaderState = {
+  currentBookId: string;
+  books: ReaderBookState[];
   filePath: string;
   title: string;
   text: string;
@@ -9,7 +22,8 @@ type ReaderState = {
 };
 
 type ReaderDiskState = {
-  filePath: string;
+  currentBookId?: string;
+  filePath?: string;
   position: number;
   charsPerPage: number;
 };
@@ -198,6 +212,7 @@ declare global {
       markWelcomeSeen: () => Promise<boolean>;
       getReaderState: () => Promise<ReaderState>;
       openReaderFile: () => Promise<ReaderState>;
+      selectReaderBook: (bookId: string) => Promise<ReaderState>;
       saveReaderState: (state: ReaderDiskState) => Promise<ReaderDiskState>;
       quitApp: () => Promise<void>;
       onAlwaysOnTopChanged: (callback: (enabled: boolean) => void) => () => void;

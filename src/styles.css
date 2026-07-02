@@ -2538,6 +2538,62 @@ textarea[aria-invalid="true"] {
   min-width: 0;
 }
 
+.reader-library {
+  display: grid;
+  grid-auto-columns: minmax(132px, 1fr);
+  grid-auto-flow: column;
+  gap: 8px;
+  min-width: 0;
+  overflow-x: auto;
+  padding-bottom: 2px;
+  scrollbar-width: thin;
+}
+
+.reader-book-option {
+  display: grid;
+  min-width: 0;
+  gap: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 13px;
+  padding: 9px 10px;
+  background: rgba(255, 255, 255, 0.065);
+  color: rgba(255, 255, 255, 0.86);
+  cursor: pointer;
+  text-align: left;
+  transition:
+    background 160ms ease,
+    border-color 160ms ease,
+    transform 160ms ease;
+}
+
+.reader-book-option:hover {
+  border-color: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.105);
+  transform: translateY(-1px);
+}
+
+.reader-book-option.active {
+  border-color: rgba(91, 197, 255, 0.46);
+  background: rgba(91, 197, 255, 0.16);
+}
+
+.reader-book-option span {
+  min-width: 0;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.reader-book-option em {
+  overflow: hidden;
+  color: rgba(255, 255, 255, 0.48);
+  font-size: 10px;
+  font-style: normal;
+  line-height: 1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .reader-page {
   min-height: 74px;
   max-height: 104px;
@@ -3848,6 +3904,26 @@ textarea[aria-invalid="true"] {
 :root[data-theme="light"] .photo-tile figcaption,
 :root[data-theme="light"] .photo-empty {
   color: rgba(20, 24, 31, 0.62);
+}
+
+:root[data-theme="light"] .reader-book-option {
+  border-color: rgba(22, 30, 46, 0.08);
+  background: rgba(22, 30, 46, 0.055);
+  color: rgba(20, 24, 31, 0.84);
+}
+
+:root[data-theme="light"] .reader-book-option:hover {
+  border-color: rgba(22, 30, 46, 0.16);
+  background: rgba(22, 30, 46, 0.085);
+}
+
+:root[data-theme="light"] .reader-book-option.active {
+  border-color: rgba(24, 120, 190, 0.36);
+  background: rgba(24, 120, 190, 0.12);
+}
+
+:root[data-theme="light"] .reader-book-option em {
+  color: rgba(20, 24, 31, 0.5);
 }
 
 :root[data-theme="light"] .compact-photo-carousel {
