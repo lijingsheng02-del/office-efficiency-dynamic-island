@@ -11,6 +11,8 @@ out/
 *.blockmap
 *.exe
 *.zip
+!release-assets/
+!release-assets/*.zip
 
 # Local generated media and handoff files
 ads/
