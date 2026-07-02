@@ -2962,28 +2962,59 @@ textarea[aria-invalid="true"] {
 }
 
 .reader-content-options {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
   flex: 0 0 auto;
   align-items: center;
-  justify-content: space-between;
   gap: 10px;
   min-width: 0;
   color: rgba(255, 255, 255, 0.58);
   font-size: 11px;
 }
 
-.reader-content-options select {
+.reader-char-pills {
+  display: flex;
+  min-width: 0;
+  gap: 5px;
+  overflow-x: auto;
+  padding-bottom: 1px;
+  scrollbar-width: none;
+}
+
+.reader-char-pills::-webkit-scrollbar {
+  display: none;
+}
+
+.reader-char-pills button {
+  flex: 0 0 auto;
   height: 28px;
-  min-width: 82px;
+  min-width: 42px;
   border: 0;
   border-radius: 999px;
-  padding: 0 28px 0 12px;
+  padding: 0 10px;
   background: rgba(255, 255, 255, 0.12);
   color: rgba(255, 255, 255, 0.86);
-  font: inherit;
   font-size: 12px;
   font-weight: 700;
-  outline: none;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    background 150ms ease,
+    color 150ms ease,
+    transform 150ms ease;
+}
+
+.reader-char-pills button:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.reader-char-pills button.active {
+  background: rgba(255, 255, 255, 0.9);
+  color: rgba(15, 18, 22, 0.86);
+}
+
+.reader-char-pills button:active {
+  transform: scale(0.96);
 }
 
 .compact-setting {
@@ -4346,9 +4377,18 @@ textarea[aria-invalid="true"] {
   color: rgba(20, 24, 31, 0.5);
 }
 
-:root[data-theme="light"] .reader-content-options select {
+:root[data-theme="light"] .reader-char-pills button {
   background: rgba(20, 24, 31, 0.08);
   color: rgba(20, 24, 31, 0.78);
+}
+
+:root[data-theme="light"] .reader-char-pills button:hover {
+  background: rgba(20, 24, 31, 0.12);
+}
+
+:root[data-theme="light"] .reader-char-pills button.active {
+  background: rgba(20, 24, 31, 0.86);
+  color: rgba(255, 255, 255, 0.94);
 }
 
 :root[data-theme="light"] .reader-detail-card ::-webkit-scrollbar-thumb,

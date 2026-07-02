@@ -230,13 +230,19 @@ export function ReaderDetail({
 
             <div className="reader-content-options">
               <span>每页字数</span>
-              <select value={reader.charsPerPage} onChange={(event) => onChangeCharsPerPage(Number(event.target.value))}>
+              <div className="reader-char-pills" role="group" aria-label="每页字数">
                 {CHARS_OPTIONS.map((option) => (
-                  <option key={option} value={option}>
+                  <button
+                    type="button"
+                    key={option}
+                    className={reader.charsPerPage === option ? 'active' : ''}
+                    onClick={() => onChangeCharsPerPage(option)}
+                    aria-pressed={reader.charsPerPage === option}
+                  >
                     {option}
-                  </option>
+                  </button>
                 ))}
-              </select>
+              </div>
             </div>
           </div>
         ) : null}
