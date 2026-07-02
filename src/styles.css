@@ -1822,9 +1822,13 @@ textarea[aria-invalid="true"] {
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
-.reader-detail-card.reader-level-library,
-.reader-detail-card.reader-level-content {
+.reader-detail-card.reader-level-library {
   grid-template-rows: auto minmax(0, 1fr);
+}
+
+.reader-detail-card.reader-level-content {
+  grid-template-rows: minmax(0, 1fr);
+  padding: 10px 14px 12px;
 }
 
 .reader-detail-card.reader-level-toc {
@@ -2657,7 +2661,7 @@ textarea[aria-invalid="true"] {
   min-height: 0;
   overflow: hidden;
   flex-direction: column;
-  gap: 8px;
+  gap: 7px;
 }
 
 .reader-library-list,
@@ -2812,6 +2816,90 @@ textarea[aria-invalid="true"] {
 
 .reader-link-button:hover {
   background: rgba(255, 255, 255, 0.15);
+  transform: translateY(-1px);
+}
+
+.reader-reading-topbar {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  color: rgba(255, 255, 255, 0.58);
+  font-size: 11px;
+}
+
+.reader-reading-topbar > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.reader-options-toggle {
+  display: grid;
+  min-width: 34px;
+  height: 26px;
+  place-items: center;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.09);
+  color: rgba(255, 255, 255, 0.8);
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1;
+  transition:
+    background 160ms ease,
+    color 160ms ease,
+    transform 160ms ease;
+}
+
+.reader-options-toggle:hover,
+.reader-options-toggle.active {
+  background: rgba(255, 255, 255, 0.9);
+  color: rgba(15, 18, 22, 0.86);
+}
+
+.reader-reading-progress {
+  flex: 0 0 auto;
+  height: 3px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.reader-reading-progress span {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  background: #5bc5ff;
+  transform-origin: left center;
+  transition: transform 180ms ease;
+}
+
+.reader-reading-footer {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.reader-reading-footer button {
+  min-width: 0;
+  height: 30px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.82);
+  cursor: pointer;
+  font-size: 12px;
+  line-height: 1;
+  transition:
+    background 160ms ease,
+    color 160ms ease,
+    transform 160ms ease;
+}
+
+.reader-reading-footer button:hover:not(:disabled) {
   transform: translateY(-1px);
 }
 
@@ -4352,6 +4440,10 @@ textarea[aria-invalid="true"] {
   color: rgba(20, 24, 31, 0.5);
 }
 
+:root[data-theme="light"] .reader-reading-topbar {
+  color: rgba(20, 24, 31, 0.5);
+}
+
 :root[data-theme="light"] .reader-link-button {
   background: rgba(20, 24, 31, 0.08);
   color: rgba(20, 24, 31, 0.72);
@@ -4359,6 +4451,26 @@ textarea[aria-invalid="true"] {
 
 :root[data-theme="light"] .reader-link-button:hover {
   background: rgba(20, 24, 31, 0.12);
+}
+
+:root[data-theme="light"] .reader-options-toggle {
+  background: rgba(20, 24, 31, 0.08);
+  color: rgba(20, 24, 31, 0.72);
+}
+
+:root[data-theme="light"] .reader-options-toggle:hover,
+:root[data-theme="light"] .reader-options-toggle.active {
+  background: rgba(20, 24, 31, 0.86);
+  color: rgba(255, 255, 255, 0.94);
+}
+
+:root[data-theme="light"] .reader-reading-progress {
+  background: rgba(20, 24, 31, 0.08);
+}
+
+:root[data-theme="light"] .reader-reading-footer button {
+  background: rgba(20, 24, 31, 0.08);
+  color: rgba(20, 24, 31, 0.74);
 }
 
 :root[data-theme="light"] .reader-resume-option,

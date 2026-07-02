@@ -42,6 +42,7 @@ export function ReaderDetail({
 }: ReaderDetailProps) {
   const [readerLevel, setReaderLevel] = useState<'library' | 'toc' | 'content'>('library');
   const [chapterPage, setChapterPage] = useState(0);
+  const [showReadingOptions, setShowReadingOptions] = useState(false);
   const hasBook = Boolean(reader.filePath && reader.text);
   const hasLibrary = reader.books.length > 0;
   const emptyMessage = reader.filePath ? '当前书籍文件不存在或无法读取，请选择其他书籍或重新导入。' : '点击“导入书籍”添加小说文本，支持一次选择多本。';
@@ -93,26 +94,30 @@ export function ReaderDetail({
   };
 
   const continueReading = () => {
+    setShowReadingOptions(false);
     setReaderLevel('content');
   };
 
   const openChapter = (position: number) => {
     onJumpToPosition(position);
+    setShowReadingOptions(false);
     setReaderLevel('content');
   };
 
   return (
     <DetailShell title="小说阅读" onBack={onBack} onClose={onClose}>
       <article className={`reader-detail-card reader-level-${readerLevel}`} onWheel={handleWheel}>
-        <div className="reader-card-header">
-          <div className="card-copy">
-            <span className="eyebrow">小说阅读</span>
-            <strong className="truncate">{headerTitle}</strong>
+        {readerLevel !== 'content' ? (
+          <div className="reader-card-header">
+            <div className="card-copy">
+              <span className="eyebrow">小说阅读</span>
+              <strong className="truncate">{headerTitle}</strong>
+            </div>
+            <button type="button" className="reader-import-button" onClick={onOpenReaderFile}>
+              导入
+            </button>
           </div>
-          <button type="button" className="reader-import-button" onClick={onOpenReaderFile}>
-            导入
-          </button>
-        </div>
+        ) : null}
 
         {readerLevel === 'toc' ? (
           <div className="reader-step-nav" aria-label="阅读层级">
@@ -213,25 +218,30 @@ export function ReaderDetail({
 
         {readerLevel === 'content' ? (
           <div className="reader-content-panel">
-            <div className="reader-path-row">
+            <div className="reader-reading-topbar">
               <button type="button" className="reader-link-button" onClick={() => setReaderLevel('toc')}>
                 ‹ 目录
               </button>
               <span className="truncate">{reader.title}</span>
+              <button
+                type="button"
+                className={`reader-options-toggle ${showReadingOptions ? 'active' : ''}`}
+                onClick={() => setShowReadingOptions((visible) => !visible)}
+                aria-pressed={showReadingOptions}
+              >
+                Aa
+              </button>
             </div>
 
             <p className={`reader-detail-page ${hasBook ? '' : 'empty'}`} style={{ fontSize: `${reader.fontSize}px` }}>
               {hasBook ? readerPageText || '这一页暂时没有内容。' : emptyMessage}
             </p>
 
-            <div className="reader-progress">
-              <span>{hasBook ? `${readerProgress}%` : '0%'}</span>
-              <div className="progress-track" aria-hidden="true">
-                <div className="progress-value" style={{ transform: `scaleX(${readerProgress / 100})` }} />
-              </div>
+            <div className="reader-reading-progress" aria-label={`阅读进度 ${readerProgress}%`}>
+              <span style={{ transform: `scaleX(${readerProgress / 100})` }} />
             </div>
 
-            <div className="reader-controls">
+            <div className="reader-reading-footer">
               <button type="button" onClick={onPreviousPage} disabled={!hasBook}>
                 上一页
               </button>
@@ -240,7 +250,8 @@ export function ReaderDetail({
               </button>
             </div>
 
-            <div className="reader-content-options">
+            {showReadingOptions ? (
+              <div className="reader-content-options">
               <div className="reader-density-group">
                 <span>每页字数</span>
                 <div className="reader-char-pills" role="group" aria-label="每页字数">
@@ -273,7 +284,8 @@ export function ReaderDetail({
                   ))}
                 </div>
               </div>
-            </div>
+              </div>
+            ) : null}
           </div>
         ) : null}
       </article>
