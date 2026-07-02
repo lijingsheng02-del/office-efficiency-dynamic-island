@@ -17,6 +17,11 @@ type ReaderDetailProps = {
 };
 
 const CHARS_OPTIONS = [120, 160, 200, 240, 320, 420, 560];
+const levelMeta = {
+  library: { label: '书库', title: '选择一本书' },
+  toc: { label: '目录', title: '章节目录' },
+  content: { label: '正文', title: '正在阅读' },
+};
 
 export function ReaderDetail({
   reader,
@@ -36,6 +41,7 @@ export function ReaderDetail({
   const hasLibrary = reader.books.length > 0;
   const emptyMessage = reader.filePath ? '当前书籍文件不存在或无法读取，请选择其他书籍或重新导入。' : '点击“导入书籍”添加小说文本，支持一次选择多本。';
   const currentBook = useMemo(() => reader.books.find((book) => book.id === reader.currentBookId) ?? null, [reader.books, reader.currentBookId]);
+  const headerTitle = readerLevel === 'library' ? levelMeta.library.title : reader.title || levelMeta[readerLevel].title;
 
   useEffect(() => {
     if (!hasLibrary) {
@@ -70,14 +76,26 @@ export function ReaderDetail({
 
   return (
     <DetailShell title="小说阅读" onBack={onBack} onClose={onClose}>
-      <article className="reader-detail-card" onWheel={handleWheel}>
+      <article className={`reader-detail-card reader-level-${readerLevel}`} onWheel={handleWheel}>
         <div className="reader-card-header">
           <div className="card-copy">
-            <span className="eyebrow">{readerLevel === 'library' ? '一级：书库' : readerLevel === 'toc' ? '二级：目录' : '三级：正文'}</span>
-            <strong className="truncate">{readerLevel === 'library' ? '选择书名' : reader.title || '还没有选择小说文件'}</strong>
+            <span className="eyebrow">小说阅读</span>
+            <strong className="truncate">{headerTitle}</strong>
           </div>
-          <button type="button" className="small-action" onClick={onOpenReaderFile}>
-            导入书籍
+          <button type="button" className="reader-import-button" onClick={onOpenReaderFile}>
+            导入
+          </button>
+        </div>
+
+        <div className="reader-step-nav" aria-label="阅读层级">
+          <button type="button" className={readerLevel === 'library' ? 'active' : ''} onClick={() => setReaderLevel('library')}>
+            书库
+          </button>
+          <button type="button" className={readerLevel === 'toc' ? 'active' : ''} disabled={!reader.currentBookId} onClick={() => setReaderLevel('toc')}>
+            目录
+          </button>
+          <button type="button" className={readerLevel === 'content' ? 'active' : ''} disabled={!hasBook} onClick={() => setReaderLevel('content')}>
+            正文
           </button>
         </div>
 
@@ -93,8 +111,13 @@ export function ReaderDetail({
                     onClick={() => openBook(book.id)}
                     title={book.filePath}
                   >
-                    <span className="truncate">{book.title}</span>
-                    <em>{book.exists ? (book.id === reader.currentBookId ? '当前书籍' : '进入目录') : '文件丢失'}</em>
+                    <span className="reader-row-main">
+                      <strong className="truncate">{book.title}</strong>
+                      <em>{book.exists ? (book.id === reader.currentBookId ? '当前书籍' : '进入目录') : '文件丢失'}</em>
+                    </span>
+                    <span className="reader-row-accessory" aria-hidden="true">
+                      ›
+                    </span>
                   </button>
                 ))}
               </div>
@@ -108,22 +131,30 @@ export function ReaderDetail({
           <div className="reader-level-panel">
             <div className="reader-path-row">
               <button type="button" className="reader-link-button" onClick={() => setReaderLevel('library')}>
-                返回书库
+                ‹ 书库
               </button>
               <span className="truncate">{currentBook?.title || reader.title}</span>
             </div>
             {hasBook ? (
               <>
                 <button type="button" className="reader-resume-option" onClick={continueReading}>
-                  <span>从上次退出的地方继续阅读</span>
-                  <em>{readerProgress}%</em>
+                  <span className="reader-row-main">
+                    <strong className="truncate">继续阅读</strong>
+                    <em>从上次退出的位置开始</em>
+                  </span>
+                  <span className="reader-progress-pill">{readerProgress}%</span>
                 </button>
                 {reader.chapters.length ? (
                   <div className="reader-chapter-list" aria-label="章节目录">
                     {reader.chapters.map((chapter, index) => (
                       <button type="button" key={chapter.id} className="reader-chapter-option" onClick={() => openChapter(chapter.position)}>
-                        <span className="truncate">{chapter.title}</span>
-                        <em>{index + 1}</em>
+                        <span className="reader-row-main">
+                          <strong className="truncate">{chapter.title}</strong>
+                          <em>第 {index + 1} 节</em>
+                        </span>
+                        <span className="reader-row-accessory" aria-hidden="true">
+                          ›
+                        </span>
                       </button>
                     ))}
                   </div>
@@ -141,7 +172,7 @@ export function ReaderDetail({
           <>
             <div className="reader-path-row">
               <button type="button" className="reader-link-button" onClick={() => setReaderLevel('toc')}>
-                返回目录
+                ‹ 目录
               </button>
               <span className="truncate">{reader.title}</span>
             </div>
