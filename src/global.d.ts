@@ -6,6 +6,7 @@ type ReaderBookState = {
   title: string;
   position: number;
   charsPerPage: number;
+  fontSize: number;
   addedAt: string;
   updatedAt: string;
   exists: boolean;
@@ -26,6 +27,7 @@ type ReaderState = {
   chapters: ReaderChapter[];
   position: number;
   charsPerPage: number;
+  fontSize: number;
 };
 
 type ReaderDiskState = {
@@ -33,6 +35,7 @@ type ReaderDiskState = {
   filePath?: string;
   position: number;
   charsPerPage: number;
+  fontSize?: number;
 };
 
 type PlanItem = {

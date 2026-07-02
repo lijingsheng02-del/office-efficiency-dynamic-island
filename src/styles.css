@@ -2963,19 +2963,25 @@ textarea[aria-invalid="true"] {
 
 .reader-content-options {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   flex: 0 0 auto;
-  align-items: center;
-  gap: 10px;
+  align-items: start;
+  gap: 8px;
   min-width: 0;
   color: rgba(255, 255, 255, 0.58);
   font-size: 11px;
 }
 
+.reader-density-group {
+  display: grid;
+  min-width: 0;
+  gap: 5px;
+}
+
 .reader-char-pills {
   display: flex;
   min-width: 0;
-  gap: 5px;
+  gap: 4px;
   overflow-x: auto;
   padding-bottom: 1px;
   scrollbar-width: none;
@@ -2987,14 +2993,14 @@ textarea[aria-invalid="true"] {
 
 .reader-char-pills button {
   flex: 0 0 auto;
-  height: 28px;
-  min-width: 42px;
+  height: 26px;
+  min-width: 38px;
   border: 0;
   border-radius: 999px;
-  padding: 0 10px;
+  padding: 0 9px;
   background: rgba(255, 255, 255, 0.12);
   color: rgba(255, 255, 255, 0.86);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
   line-height: 1;
   cursor: pointer;

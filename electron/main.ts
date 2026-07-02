@@ -77,6 +77,7 @@ type ReaderBookDiskState = {
   title: string;
   position: number;
   charsPerPage: number;
+  fontSize: number;
   addedAt: string;
   updatedAt: string;
 };
@@ -91,6 +92,7 @@ type ReaderStatePatch = {
   filePath?: string;
   position?: number;
   charsPerPage?: number;
+  fontSize?: number;
 };
 
 type ReaderChapter = {
@@ -782,6 +784,11 @@ function clampReaderCharsPerPage(value: unknown) {
   return Math.max(120, Math.min(600, Number.isFinite(numeric) ? numeric : 120));
 }
 
+function clampReaderFontSize(value: unknown) {
+  const numeric = Number(value);
+  return Math.max(12, Math.min(20, Number.isFinite(numeric) ? numeric : 14));
+}
+
 function normalizeBookId(filePath: string) {
   return path.normalize(filePath);
 }
@@ -790,7 +797,10 @@ function getBookTitle(filePath: string) {
   return path.basename(filePath, path.extname(filePath));
 }
 
-function normalizeReaderBook(value: Partial<ReaderBookDiskState> & { FilePath?: string; Position?: number; CharsPerPage?: number }, now: string) {
+function normalizeReaderBook(
+  value: Partial<ReaderBookDiskState> & { FilePath?: string; Position?: number; CharsPerPage?: number; FontSize?: number },
+  now: string,
+) {
   const filePath = typeof value.filePath === 'string' ? value.filePath : typeof value.FilePath === 'string' ? value.FilePath : '';
   if (!filePath) return null;
   const id = typeof value.id === 'string' && value.id ? value.id : normalizeBookId(filePath);
@@ -801,6 +811,7 @@ function normalizeReaderBook(value: Partial<ReaderBookDiskState> & { FilePath?: 
     title: typeof value.title === 'string' && value.title ? value.title : getBookTitle(filePath),
     position: Math.max(0, Number.isFinite(value.position ?? value.Position) ? Number(value.position ?? value.Position) : 0),
     charsPerPage: clampReaderCharsPerPage(value.charsPerPage ?? value.CharsPerPage),
+    fontSize: clampReaderFontSize(value.fontSize ?? value.FontSize),
     addedAt: typeof value.addedAt === 'string' && value.addedAt ? value.addedAt : now,
     updatedAt: typeof value.updatedAt === 'string' && value.updatedAt ? value.updatedAt : now,
   };
@@ -813,6 +824,7 @@ function normalizeReaderState(
           FilePath?: string;
           Position?: number;
           CharsPerPage?: number;
+          FontSize?: number;
         })
     | null
     | undefined,
@@ -838,6 +850,7 @@ function normalizeReaderState(
           filePath: value?.filePath ?? value?.FilePath,
           position: value?.position ?? value?.Position,
           charsPerPage: value?.charsPerPage ?? value?.CharsPerPage,
+          fontSize: value?.fontSize ?? value?.FontSize,
         },
         now,
       ),
@@ -867,6 +880,7 @@ function readJsonState(filePath: string): ReaderDiskState | null {
       FilePath?: string;
       Position?: number;
       CharsPerPage?: number;
+      FontSize?: number;
     };
 
     return normalizeReaderState(parsed);
@@ -967,6 +981,7 @@ function getReaderPayload(state = loadReaderDiskState()) {
       chapters: [],
       position: 0,
       charsPerPage: 120,
+      fontSize: 14,
     };
   }
 
@@ -980,6 +995,7 @@ function getReaderPayload(state = loadReaderDiskState()) {
       chapters: [],
       position: currentBook.position,
       charsPerPage: currentBook.charsPerPage,
+      fontSize: currentBook.fontSize,
     };
   }
 
@@ -989,11 +1005,14 @@ function getReaderPayload(state = loadReaderDiskState()) {
 
   return {
     currentBookId: currentBook.id,
-    books: books.map((book) => (book.id === currentBook.id ? { ...book, position, charsPerPage: currentBook.charsPerPage } : book)),
+    books: books.map((book) =>
+      book.id === currentBook.id ? { ...book, position, charsPerPage: currentBook.charsPerPage, fontSize: currentBook.fontSize } : book,
+    ),
     filePath: currentBook.filePath,
     position,
     title: currentBook.title,
     charsPerPage: currentBook.charsPerPage,
+    fontSize: currentBook.fontSize,
     text,
     chapters,
   };
@@ -1460,6 +1479,7 @@ ipcMain.handle('open-reader-file', async () => {
   const firstImportedId = normalizeBookId(result.filePaths[0]);
   const currentBook = currentState.books.find((book) => book.id === currentState.currentBookId);
   const defaultCharsPerPage = currentBook?.charsPerPage ?? currentState.books[0]?.charsPerPage ?? 120;
+  const defaultFontSize = currentBook?.fontSize ?? currentState.books[0]?.fontSize ?? 14;
 
   result.filePaths.forEach((filePath) => {
     const id = normalizeBookId(filePath);
@@ -1471,6 +1491,7 @@ ipcMain.handle('open-reader-file', async () => {
       title: getBookTitle(filePath),
       position: existingBook?.position ?? 0,
       charsPerPage: existingBook?.charsPerPage ?? defaultCharsPerPage,
+      fontSize: existingBook?.fontSize ?? defaultFontSize,
       addedAt: existingBook?.addedAt ?? now,
       updatedAt: now,
     });
@@ -1510,6 +1531,7 @@ ipcMain.handle('save-reader-state', (_event, patch: ReaderStatePatch) => {
     title: existingBook?.title ?? getBookTitle(patch.filePath ?? ''),
     position: Math.max(0, Number.isFinite(Number(patch.position)) ? Number(patch.position) : existingBook?.position ?? 0),
     charsPerPage: clampReaderCharsPerPage(patch.charsPerPage ?? existingBook?.charsPerPage),
+    fontSize: clampReaderFontSize(patch.fontSize ?? existingBook?.fontSize),
     addedAt: existingBook?.addedAt ?? now,
     updatedAt: now,
   };

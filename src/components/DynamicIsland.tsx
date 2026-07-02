@@ -47,6 +47,7 @@ export type ReaderBookState = {
   title: string;
   position: number;
   charsPerPage: number;
+  fontSize: number;
   addedAt: string;
   updatedAt: string;
   exists: boolean;
@@ -67,6 +68,7 @@ export type ReaderState = {
   chapters: ReaderChapter[];
   position: number;
   charsPerPage: number;
+  fontSize: number;
 };
 
 export type IslandPhoto = {
@@ -118,7 +120,17 @@ type DragState = {
   dragging: boolean;
 };
 
-const EMPTY_READER: ReaderState = { currentBookId: '', books: [], filePath: '', title: '', text: '', chapters: [], position: 0, charsPerPage: 120 };
+const EMPTY_READER: ReaderState = {
+  currentBookId: '',
+  books: [],
+  filePath: '',
+  title: '',
+  text: '',
+  chapters: [],
+  position: 0,
+  charsPerPage: 120,
+  fontSize: 14,
+};
 const EMPTY_VIDEO_WALLPAPER: VideoWallpaperState = {
   enabled: false,
   filePath: '',
@@ -257,6 +269,7 @@ function syncCurrentBookProgress(reader: ReaderState): ReaderState {
             ...book,
             position: reader.position,
             charsPerPage: reader.charsPerPage,
+            fontSize: reader.fontSize,
             updatedAt: now,
           }
         : book,
@@ -536,6 +549,7 @@ export function DynamicIsland() {
       filePath: nextReader.filePath,
       position: nextReader.position,
       charsPerPage: nextReader.charsPerPage,
+      fontSize: nextReader.fontSize,
     });
   };
 
@@ -625,6 +639,7 @@ export function DynamicIsland() {
   const nextPage = () => updateReader((current) => ({ ...current, position: clampPosition(current.position + current.charsPerPage, current.text.length) }));
   const jumpToReaderPosition = (position: number) => updateReader((current) => ({ ...current, position: clampPosition(position, current.text.length) }));
   const changeCharsPerPage = (charsPerPage: number) => updateReader((current) => ({ ...current, charsPerPage, position: clampPosition(current.position, current.text.length) }));
+  const changeReaderFontSize = (fontSize: number) => updateReader((current) => ({ ...current, fontSize }));
   const goDashboard = () => setActiveModule('dashboard');
 
   const handlePointerDown = (event: PointerEvent<HTMLDivElement>) => {
@@ -708,6 +723,7 @@ export function DynamicIsland() {
           onPreviousPage={previousPage}
           onNextPage={nextPage}
           onChangeCharsPerPage={changeCharsPerPage}
+          onChangeFontSize={changeReaderFontSize}
           onBack={goDashboard}
           onClose={closePanel}
         />

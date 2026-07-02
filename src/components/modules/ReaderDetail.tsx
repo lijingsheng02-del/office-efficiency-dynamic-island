@@ -12,11 +12,13 @@ type ReaderDetailProps = {
   onPreviousPage: () => void;
   onNextPage: () => void;
   onChangeCharsPerPage: (charsPerPage: number) => void;
+  onChangeFontSize: (fontSize: number) => void;
   onBack: () => void;
   onClose: () => void;
 };
 
-const CHARS_OPTIONS = [120, 160, 200, 240, 320, 420, 560];
+const CHARS_OPTIONS = [120, 160, 200, 240];
+const FONT_SIZE_OPTIONS = [13, 14, 15, 16, 18];
 const CHAPTERS_PER_PAGE = 500;
 const levelMeta = {
   library: { label: '书库', title: '选择一本书' },
@@ -34,6 +36,7 @@ export function ReaderDetail({
   onPreviousPage,
   onNextPage,
   onChangeCharsPerPage,
+  onChangeFontSize,
   onBack,
   onClose,
 }: ReaderDetailProps) {
@@ -217,7 +220,7 @@ export function ReaderDetail({
               <span className="truncate">{reader.title}</span>
             </div>
 
-            <p className={`reader-detail-page ${hasBook ? '' : 'empty'}`}>
+            <p className={`reader-detail-page ${hasBook ? '' : 'empty'}`} style={{ fontSize: `${reader.fontSize}px` }}>
               {hasBook ? readerPageText || '这一页暂时没有内容。' : emptyMessage}
             </p>
 
@@ -238,19 +241,37 @@ export function ReaderDetail({
             </div>
 
             <div className="reader-content-options">
-              <span>每页字数</span>
-              <div className="reader-char-pills" role="group" aria-label="每页字数">
-                {CHARS_OPTIONS.map((option) => (
-                  <button
-                    type="button"
-                    key={option}
-                    className={reader.charsPerPage === option ? 'active' : ''}
-                    onClick={() => onChangeCharsPerPage(option)}
-                    aria-pressed={reader.charsPerPage === option}
-                  >
-                    {option}
-                  </button>
-                ))}
+              <div className="reader-density-group">
+                <span>每页字数</span>
+                <div className="reader-char-pills" role="group" aria-label="每页字数">
+                  {CHARS_OPTIONS.map((option) => (
+                    <button
+                      type="button"
+                      key={option}
+                      className={reader.charsPerPage === option ? 'active' : ''}
+                      onClick={() => onChangeCharsPerPage(option)}
+                      aria-pressed={reader.charsPerPage === option}
+                    >
+                      {option}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="reader-density-group">
+                <span>字体</span>
+                <div className="reader-char-pills" role="group" aria-label="字体大小">
+                  {FONT_SIZE_OPTIONS.map((option) => (
+                    <button
+                      type="button"
+                      key={option}
+                      className={reader.fontSize === option ? 'active' : ''}
+                      onClick={() => onChangeFontSize(option)}
+                      aria-pressed={reader.fontSize === option}
+                    >
+                      {option}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
