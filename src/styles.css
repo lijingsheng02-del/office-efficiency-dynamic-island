@@ -2671,6 +2671,44 @@ textarea[aria-invalid="true"] {
   scrollbar-width: thin;
 }
 
+.reader-chapter-pager {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  border-radius: 999px;
+  padding: 4px;
+  background: rgba(0, 0, 0, 0.14);
+}
+
+.reader-chapter-pager button {
+  height: 26px;
+  border-radius: 999px;
+  padding: 0 10px;
+  background: rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.78);
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.reader-chapter-pager button:disabled {
+  color: rgba(255, 255, 255, 0.3);
+  cursor: default;
+}
+
+.reader-chapter-pager span {
+  overflow: hidden;
+  color: rgba(255, 255, 255, 0.56);
+  font-size: 11px;
+  line-height: 1;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .reader-book-option {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
@@ -4254,6 +4292,23 @@ textarea[aria-invalid="true"] {
 :root[data-theme="light"] .reader-row-accessory {
   background: rgba(20, 24, 31, 0.06);
   color: rgba(20, 24, 31, 0.4);
+}
+
+:root[data-theme="light"] .reader-chapter-pager {
+  background: rgba(20, 24, 31, 0.06);
+}
+
+:root[data-theme="light"] .reader-chapter-pager button {
+  background: rgba(255, 255, 255, 0.62);
+  color: rgba(20, 24, 31, 0.68);
+}
+
+:root[data-theme="light"] .reader-chapter-pager button:disabled {
+  color: rgba(20, 24, 31, 0.28);
+}
+
+:root[data-theme="light"] .reader-chapter-pager span {
+  color: rgba(20, 24, 31, 0.5);
 }
 
 :root[data-theme="light"] .reader-path-row {

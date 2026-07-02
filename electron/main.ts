@@ -946,7 +946,7 @@ function extractReaderChapters(text: string): ReaderChapter[] {
     position += line.length + 1;
   }
 
-  return chapters.slice(0, 500);
+  return chapters;
 }
 
 function getReaderPayload(state = loadReaderDiskState()) {

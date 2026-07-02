@@ -17,6 +17,7 @@ type ReaderDetailProps = {
 };
 
 const CHARS_OPTIONS = [120, 160, 200, 240, 320, 420, 560];
+const CHAPTERS_PER_PAGE = 500;
 const levelMeta = {
   library: { label: '书库', title: '选择一本书' },
   toc: { label: '目录', title: '章节目录' },
@@ -37,11 +38,17 @@ export function ReaderDetail({
   onClose,
 }: ReaderDetailProps) {
   const [readerLevel, setReaderLevel] = useState<'library' | 'toc' | 'content'>('library');
+  const [chapterPage, setChapterPage] = useState(0);
   const hasBook = Boolean(reader.filePath && reader.text);
   const hasLibrary = reader.books.length > 0;
   const emptyMessage = reader.filePath ? '当前书籍文件不存在或无法读取，请选择其他书籍或重新导入。' : '点击“导入书籍”添加小说文本，支持一次选择多本。';
   const currentBook = useMemo(() => reader.books.find((book) => book.id === reader.currentBookId) ?? null, [reader.books, reader.currentBookId]);
   const headerTitle = readerLevel === 'library' ? levelMeta.library.title : reader.title || levelMeta[readerLevel].title;
+  const chapterPageCount = Math.max(1, Math.ceil(reader.chapters.length / CHAPTERS_PER_PAGE));
+  const visibleChapters = useMemo(
+    () => reader.chapters.slice(chapterPage * CHAPTERS_PER_PAGE, (chapterPage + 1) * CHAPTERS_PER_PAGE),
+    [chapterPage, reader.chapters],
+  );
 
   useEffect(() => {
     if (!hasLibrary) {
@@ -52,6 +59,14 @@ export function ReaderDetail({
       setReaderLevel('toc');
     }
   }, [hasBook, hasLibrary, readerLevel]);
+
+  useEffect(() => {
+    setChapterPage(0);
+  }, [reader.currentBookId]);
+
+  useEffect(() => {
+    setChapterPage((page) => Math.min(page, chapterPageCount - 1));
+  }, [chapterPageCount]);
 
   const handleWheel = (event: WheelEvent<HTMLElement>) => {
     if (!hasBook || readerLevel !== 'content') return;
@@ -144,19 +159,36 @@ export function ReaderDetail({
                   <span className="reader-progress-pill">{readerProgress}%</span>
                 </button>
                 {reader.chapters.length ? (
-                  <div className="reader-chapter-list" aria-label="章节目录">
-                    {reader.chapters.map((chapter, index) => (
-                      <button type="button" key={chapter.id} className="reader-chapter-option" onClick={() => openChapter(chapter.position)}>
-                        <span className="reader-row-main">
-                          <strong className="truncate">{chapter.title}</strong>
-                          <em>第 {index + 1} 节</em>
-                        </span>
-                        <span className="reader-row-accessory" aria-hidden="true">
-                          ›
-                        </span>
+                  <>
+                    <div className="reader-chapter-pager">
+                      <button type="button" disabled={chapterPage === 0} onClick={() => setChapterPage((page) => Math.max(0, page - 1))}>
+                        上一组
                       </button>
-                    ))}
-                  </div>
+                      <span>
+                        {chapterPage * CHAPTERS_PER_PAGE + 1}-{Math.min((chapterPage + 1) * CHAPTERS_PER_PAGE, reader.chapters.length)} / {reader.chapters.length}
+                      </span>
+                      <button
+                        type="button"
+                        disabled={chapterPage >= chapterPageCount - 1}
+                        onClick={() => setChapterPage((page) => Math.min(chapterPageCount - 1, page + 1))}
+                      >
+                        下一组
+                      </button>
+                    </div>
+                    <div className="reader-chapter-list" aria-label="章节目录">
+                      {visibleChapters.map((chapter, index) => (
+                        <button type="button" key={chapter.id} className="reader-chapter-option" onClick={() => openChapter(chapter.position)}>
+                          <span className="reader-row-main">
+                            <strong className="truncate">{chapter.title}</strong>
+                            <em>第 {chapterPage * CHAPTERS_PER_PAGE + index + 1} 节</em>
+                          </span>
+                          <span className="reader-row-accessory" aria-hidden="true">
+                            ›
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  </>
                 ) : (
                   <p className="reader-empty-state">没有从正文识别到目录。当前只提供继续阅读入口。</p>
                 )}
