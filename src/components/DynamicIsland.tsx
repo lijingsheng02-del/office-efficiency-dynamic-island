@@ -247,6 +247,7 @@ function normalizeReaderForUi(state: ReaderState): ReaderState {
 
 function syncCurrentBookProgress(reader: ReaderState): ReaderState {
   if (!reader.currentBookId) return reader;
+  const now = new Date().toISOString();
 
   return {
     ...reader,
@@ -256,6 +257,7 @@ function syncCurrentBookProgress(reader: ReaderState): ReaderState {
             ...book,
             position: reader.position,
             charsPerPage: reader.charsPerPage,
+            updatedAt: now,
           }
         : book,
     ),

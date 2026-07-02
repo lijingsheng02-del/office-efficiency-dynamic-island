@@ -43,6 +43,15 @@ export function ReaderDetail({
   const hasLibrary = reader.books.length > 0;
   const emptyMessage = reader.filePath ? '当前书籍文件不存在或无法读取，请选择其他书籍或重新导入。' : '点击“导入书籍”添加小说文本，支持一次选择多本。';
   const currentBook = useMemo(() => reader.books.find((book) => book.id === reader.currentBookId) ?? null, [reader.books, reader.currentBookId]);
+  const sortedBooks = useMemo(
+    () =>
+      [...reader.books].sort((first, second) => {
+        if (first.id === reader.currentBookId) return -1;
+        if (second.id === reader.currentBookId) return 1;
+        return new Date(second.updatedAt).getTime() - new Date(first.updatedAt).getTime();
+      }),
+    [reader.books, reader.currentBookId],
+  );
   const headerTitle = readerLevel === 'library' ? levelMeta.library.title : reader.title || levelMeta[readerLevel].title;
   const chapterPageCount = Math.max(1, Math.ceil(reader.chapters.length / CHAPTERS_PER_PAGE));
   const visibleChapters = useMemo(
@@ -117,7 +126,7 @@ export function ReaderDetail({
           <div className="reader-level-panel">
             {hasLibrary ? (
               <div className="reader-library-list" aria-label="已导入书籍">
-                {reader.books.map((book) => (
+                {sortedBooks.map((book) => (
                   <button
                     type="button"
                     key={book.id}
