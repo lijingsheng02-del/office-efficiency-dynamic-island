@@ -287,6 +287,10 @@ export class VideoWallpaperController {
     });
 
     this.window.setIgnoreMouseEvents(true);
+    // A desktop wallpaper does not need display-refresh rendering. Keeping
+    // the compositor at 30 FPS substantially lowers GPU use while preserving
+    // smooth video playback for normal desktop viewing.
+    this.window.webContents.setFrameRate(30);
     this.window.on('closed', () => {
       this.window = null;
       this.attachedToDesktop = false;

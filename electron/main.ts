@@ -1079,6 +1079,9 @@ async function createWindow() {
   });
 
   mainWindow.setBackgroundColor('#00000000');
+  // The island is mostly static between state changes. A 30 FPS compositor
+  // cap avoids spending a full display refresh on a small transparent window.
+  mainWindow.webContents.setFrameRate(30);
   mainWindow.setAlwaysOnTop(alwaysOnTop, 'screen-saver');
   mainWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
 
@@ -1143,6 +1146,7 @@ async function createTempClipboardWindow() {
   });
 
   tempClipboardWindow.setBackgroundColor('#00000000');
+  tempClipboardWindow.webContents.setFrameRate(30);
   tempClipboardWindow.setAlwaysOnTop(true, 'screen-saver');
   tempClipboardWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
   tempClipboardWindow.on('closed', () => {
