@@ -2733,6 +2733,51 @@ textarea[aria-invalid="true"] {
     transform 160ms ease;
 }
 
+.reader-book-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: stretch;
+  gap: 7px;
+  min-width: 0;
+}
+
+.reader-book-actions {
+  display: flex;
+  align-items: stretch;
+  gap: 5px;
+}
+
+.reader-book-actions button {
+  min-width: 48px;
+  border-radius: 14px;
+  padding: 0 10px;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 750;
+  transition: background 160ms ease, color 160ms ease;
+}
+
+.reader-book-delete,
+.reader-book-cancel {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.58);
+}
+
+.reader-book-delete:hover,
+.reader-book-cancel:hover {
+  background: rgba(255, 255, 255, 0.14);
+  color: rgba(255, 255, 255, 0.84);
+}
+
+.reader-book-confirm {
+  background: rgba(255, 69, 58, 0.9);
+  color: #fff;
+}
+
+.reader-book-confirm:hover {
+  background: rgb(255, 69, 58);
+}
+
 .reader-book-option:hover {
   border-color: rgba(255, 255, 255, 0.18);
   background: rgba(255, 255, 255, 0.13);
@@ -4371,6 +4416,18 @@ textarea[aria-invalid="true"] {
 :root[data-theme="light"] .reader-book-option.active {
   border-color: rgba(20, 24, 31, 0.16);
   background: rgba(255, 255, 255, 0.82);
+}
+
+:root[data-theme="light"] .reader-book-delete,
+:root[data-theme="light"] .reader-book-cancel {
+  background: rgba(20, 24, 31, 0.07);
+  color: rgba(20, 24, 31, 0.54);
+}
+
+:root[data-theme="light"] .reader-book-delete:hover,
+:root[data-theme="light"] .reader-book-cancel:hover {
+  background: rgba(20, 24, 31, 0.12);
+  color: rgba(20, 24, 31, 0.82);
 }
 
 :root[data-theme="light"] .reader-detail-card {

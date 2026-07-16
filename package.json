@@ -1,6 +1,6 @@
 {
   "name": "dynamic-island-electron",
-  "version": "1.3.1",
+  "version": "1.3.2",
   "description": "Windows desktop Dynamic Island MVP built with Electron, React, TypeScript, and Vite.",
   "private": true,
   "main": "dist-electron/main.js",

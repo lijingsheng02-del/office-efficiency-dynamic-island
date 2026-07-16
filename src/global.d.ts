@@ -223,6 +223,7 @@ declare global {
       getReaderState: () => Promise<ReaderState>;
       openReaderFile: () => Promise<ReaderState>;
       selectReaderBook: (bookId: string) => Promise<ReaderState>;
+      deleteReaderBook: (bookId: string) => Promise<ReaderState>;
       saveReaderState: (state: ReaderDiskState) => Promise<ReaderDiskState>;
       quitApp: () => Promise<void>;
       onAlwaysOnTopChanged: (callback: (enabled: boolean) => void) => () => void;

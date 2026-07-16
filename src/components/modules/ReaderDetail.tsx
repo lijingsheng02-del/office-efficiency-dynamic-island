@@ -8,6 +8,7 @@ type ReaderDetailProps = {
   readerProgress: number;
   onOpenReaderFile: () => void;
   onSelectBook: (bookId: string) => void;
+  onDeleteBook: (bookId: string) => void;
   onJumpToPosition: (position: number) => void;
   onPreviousPage: () => void;
   onNextPage: () => void;
@@ -32,6 +33,7 @@ export function ReaderDetail({
   readerProgress,
   onOpenReaderFile,
   onSelectBook,
+  onDeleteBook,
   onJumpToPosition,
   onPreviousPage,
   onNextPage,
@@ -43,6 +45,7 @@ export function ReaderDetail({
   const [readerLevel, setReaderLevel] = useState<'library' | 'toc' | 'content'>('library');
   const [chapterPage, setChapterPage] = useState(0);
   const [showReadingOptions, setShowReadingOptions] = useState(false);
+  const [pendingDeleteBookId, setPendingDeleteBookId] = useState<string | null>(null);
   const hasBook = Boolean(reader.filePath && reader.text);
   const hasLibrary = reader.books.length > 0;
   const emptyMessage = reader.filePath ? '当前书籍文件不存在或无法读取，请选择其他书籍或重新导入。' : '点击“导入书籍”添加小说文本，支持一次选择多本。';
@@ -89,8 +92,14 @@ export function ReaderDetail({
   };
 
   const openBook = (bookId: string) => {
+    setPendingDeleteBookId(null);
     onSelectBook(bookId);
     setReaderLevel('toc');
+  };
+
+  const deleteBook = (bookId: string) => {
+    setPendingDeleteBookId(null);
+    onDeleteBook(bookId);
   };
 
   const continueReading = () => {
@@ -134,23 +143,43 @@ export function ReaderDetail({
           <div className="reader-level-panel">
             {hasLibrary ? (
               <div className="reader-library-list" aria-label="已导入书籍">
-                {sortedBooks.map((book) => (
-                  <button
-                    type="button"
-                    key={book.id}
-                    className={`reader-book-option ${book.id === reader.currentBookId ? 'active' : ''}`}
-                    onClick={() => openBook(book.id)}
-                    title={book.filePath}
-                  >
-                    <span className="reader-row-main">
-                      <strong className="truncate">{book.title}</strong>
-                      <em>{book.exists ? (book.id === reader.currentBookId ? '当前书籍' : '进入目录') : '文件丢失'}</em>
-                    </span>
-                    <span className="reader-row-accessory" aria-hidden="true">
-                      ›
-                    </span>
-                  </button>
-                ))}
+                {sortedBooks.map((book) => {
+                  const isConfirmingDelete = pendingDeleteBookId === book.id;
+                  return (
+                    <div className={`reader-book-row ${isConfirmingDelete ? 'confirming-delete' : ''}`} key={book.id}>
+                      <button
+                        type="button"
+                        className={`reader-book-option ${book.id === reader.currentBookId ? 'active' : ''}`}
+                        onClick={() => openBook(book.id)}
+                        title={book.filePath}
+                      >
+                        <span className="reader-row-main">
+                          <strong className="truncate">{book.title}</strong>
+                          <em>{book.exists ? (book.id === reader.currentBookId ? '当前书籍' : '进入目录') : '文件丢失'}</em>
+                        </span>
+                        <span className="reader-row-accessory" aria-hidden="true">
+                          ›
+                        </span>
+                      </button>
+                      <div className="reader-book-actions">
+                        {isConfirmingDelete ? (
+                          <>
+                            <button type="button" className="reader-book-cancel" onClick={() => setPendingDeleteBookId(null)}>
+                              取消
+                            </button>
+                            <button type="button" className="reader-book-confirm" onClick={() => deleteBook(book.id)}>
+                              确认
+                            </button>
+                          </>
+                        ) : (
+                          <button type="button" className="reader-book-delete" onClick={() => setPendingDeleteBookId(book.id)}>
+                            删除
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             ) : (
               <p className="reader-empty-state">{emptyMessage}</p>

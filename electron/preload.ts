@@ -223,6 +223,7 @@ const islandApi = {
   getReaderState: () => ipcRenderer.invoke('get-reader-state') as Promise<ReaderState>,
   openReaderFile: () => ipcRenderer.invoke('open-reader-file') as Promise<ReaderState>,
   selectReaderBook: (bookId: string) => ipcRenderer.invoke('select-reader-book', bookId) as Promise<ReaderState>,
+  deleteReaderBook: (bookId: string) => ipcRenderer.invoke('delete-reader-book', bookId) as Promise<ReaderState>,
   saveReaderState: (state: ReaderDiskState) => ipcRenderer.invoke('save-reader-state', state) as Promise<ReaderDiskState>,
   quitApp: () => ipcRenderer.invoke('quit-app'),
   onAlwaysOnTopChanged: (callback: (enabled: boolean) => void) => {

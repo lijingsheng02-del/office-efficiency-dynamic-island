@@ -575,6 +575,12 @@ export function DynamicIsland() {
     setReader(normalizeReaderForUi(state));
   };
 
+  const deleteReaderBook = async (bookId: string) => {
+    const state = await window.islandApi?.deleteReaderBook(bookId);
+    if (!state) return;
+    setReader(normalizeReaderForUi(state));
+  };
+
   const addPhotos = async () => {
     setPhotos(await window.photoAPI.addPhotos());
     setActiveModule('photos');
@@ -719,6 +725,7 @@ export function DynamicIsland() {
           readerProgress={readerProgress}
           onOpenReaderFile={openReaderFile}
           onSelectBook={selectReaderBook}
+          onDeleteBook={deleteReaderBook}
           onJumpToPosition={jumpToReaderPosition}
           onPreviousPage={previousPage}
           onNextPage={nextPage}

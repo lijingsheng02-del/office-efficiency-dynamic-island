@@ -1517,6 +1517,19 @@ ipcMain.handle('select-reader-book', (_event, bookId: string) => {
   return getReaderPayload(state);
 });
 
+ipcMain.handle('delete-reader-book', (_event, bookId: string) => {
+  const currentState = loadReaderDiskState();
+  const books = currentState.books.filter((book) => book.id !== bookId);
+  if (books.length === currentState.books.length) return getReaderPayload(currentState);
+
+  const currentBookId =
+    currentState.currentBookId !== bookId && books.some((book) => book.id === currentState.currentBookId)
+      ? currentState.currentBookId
+      : [...books].sort((first, second) => new Date(second.updatedAt).getTime() - new Date(first.updatedAt).getTime())[0]?.id ?? '';
+  const state = saveReaderDiskState({ currentBookId, books });
+  return getReaderPayload(state);
+});
+
 ipcMain.handle('save-reader-state', (_event, patch: ReaderStatePatch) => {
   const currentState = loadReaderDiskState();
   const bookId =
