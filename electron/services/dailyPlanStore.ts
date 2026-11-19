@@ -170,32 +170,25 @@ export class DailyPlanStore {
   }
 
   addPlanItem(text: string) {
-    const cleanText = text.trim();
+    return this.addPlanItems([text]);
+  }
+
+  addPlanItems(texts: string[]) {
     const store = this.loadStore();
-    const today = this.getTodayKey();
-    const plan = this.ensureTodayPlan(store);
+    const plan = this.prepareTodayPlan(store);
+    return this.appendPlanItems(store, plan, texts.map((text) => text.trim()).filter(Boolean));
+  }
 
-    if (!cleanText) {
-      return plan;
-    }
-
-    this.saveRollbackSnapshot(store, today, plan);
-    const id = createId();
-    const item: PlanItem = {
-      id,
-      sourceId: id,
-      text: cleanText,
-      done: false,
-      createdAt: new Date().toISOString(),
-      completedAt: null,
-      carryOverFrom: null,
-      order: plan.items.length,
-    };
-
-    const pendingCount = plan.items.filter((current) => !current.done).length;
-    plan.items = normalizeOrders([...plan.items, { ...item, order: pendingCount }]);
-    store.plansByDate[today] = plan;
-    store.lastOpenedDate = today;
+  editPlanItem(id: string, text: string) {
+    const cleanText = text.trim();
+    if (!cleanText) throw new Error('计划内容不能为空');
+    const store = this.loadStore();
+    const plan = this.prepareTodayPlan(store);
+    const item = plan.items.find((entry) => entry.id === id);
+    if (!item) throw new Error('找不到这条计划');
+    if (item.text === cleanText) return plan;
+    this.saveRollbackSnapshot(store, plan.date, plan);
+    item.text = cleanText;
     this.saveStore(store);
     return plan;
   }
@@ -312,17 +305,19 @@ export class DailyPlanStore {
 
     const existingTexts = new Set(plan.items.map((item) => item.text.trim()));
     const cleanItems = template.items.map((item) => item.trim()).filter((item) => item && !existingTexts.has(item));
+    return this.appendPlanItems(store, plan, cleanItems);
+  }
 
+  private appendPlanItems(store: PlanStore, plan: DailyPlan, cleanItems: string[]) {
     if (cleanItems.length === 0) {
       return plan;
     }
 
-    this.saveRollbackSnapshot(store, today, plan);
+    this.saveRollbackSnapshot(store, plan.date, plan);
     const pendingCount = plan.items.filter((item) => !item.done).length;
     const now = new Date().toISOString();
     const nextItems = cleanItems.map((text, index) => {
       const itemId = createId();
-      existingTexts.add(text);
       return {
         id: itemId,
         sourceId: itemId,
@@ -336,8 +331,8 @@ export class DailyPlanStore {
     });
 
     plan.items = normalizeOrders([...plan.items, ...nextItems]);
-    store.plansByDate[today] = plan;
-    store.lastOpenedDate = today;
+    store.plansByDate[plan.date] = plan;
+    store.lastOpenedDate = plan.date;
     this.saveStore(store);
     return plan;
   }
@@ -368,6 +363,12 @@ export class DailyPlanStore {
 
   runCarryOver() {
     const store = this.loadStore();
+    const plan = this.prepareTodayPlan(store);
+    this.saveStore(store);
+    return plan;
+  }
+
+  private prepareTodayPlan(store: PlanStore) {
     const today = this.getTodayKey();
     const lastOpenedDate = store.lastOpenedDate;
     const todayPlan = normalizePlan(today, store.plansByDate[today]);
@@ -393,7 +394,6 @@ export class DailyPlanStore {
 
     store.plansByDate[today] = todayPlan;
     store.lastOpenedDate = today;
-    this.saveStore(store);
     return todayPlan;
   }
 

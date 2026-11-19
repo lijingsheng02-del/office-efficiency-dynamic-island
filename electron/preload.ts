@@ -258,6 +258,9 @@ contextBridge.exposeInMainWorld('islandApi', islandApi);
 const dailyPlanAPI = {
   getTodayPlan: () => ipcRenderer.invoke('daily-plan:get-today') as Promise<DailyPlan>,
   addPlanItem: (text: string) => ipcRenderer.invoke('daily-plan:add-item', text) as Promise<DailyPlan>,
+  addPlanItems: (texts: string[]) => ipcRenderer.invoke('daily-plan:add-items', texts) as Promise<DailyPlan>,
+  editPlanItem: (id: string, text: string) => ipcRenderer.invoke('daily-plan:edit-item', id, text) as Promise<DailyPlan>,
+  exportTxt: () => ipcRenderer.invoke('daily-plan:export-txt') as Promise<boolean>,
   togglePlanItem: (id: string) => ipcRenderer.invoke('daily-plan:toggle-item', id) as Promise<DailyPlan>,
   deletePlanItem: (id: string) => ipcRenderer.invoke('daily-plan:delete-item', id) as Promise<DailyPlan>,
   reorderPlanItems: (ids: string[]) => ipcRenderer.invoke('daily-plan:reorder-items', ids) as Promise<DailyPlan>,

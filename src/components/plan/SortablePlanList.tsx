@@ -6,18 +6,17 @@ import type { PlanItem } from './types';
 
 type SortablePlanListProps = {
   items: PlanItem[];
+  onEdit: (id: string, text: string) => Promise<void>;
   onToggle: (id: string) => void;
   onDelete: (id: string) => void;
   onReorder: (ids: string[]) => void;
 };
 
-type SortableRowProps = {
+type SortableRowProps = Pick<SortablePlanListProps, 'onEdit' | 'onToggle' | 'onDelete'> & {
   item: PlanItem;
-  onToggle: (id: string) => void;
-  onDelete: (id: string) => void;
 };
 
-function SortableRow({ item, onToggle, onDelete }: SortableRowProps) {
+function SortableRow({ item, onEdit, onToggle, onDelete }: SortableRowProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.id, disabled: item.done });
 
   return (
@@ -29,6 +28,7 @@ function SortableRow({ item, onToggle, onDelete }: SortableRowProps) {
         dragDisabled={item.done}
         isDragging={isDragging}
         onToggle={onToggle}
+        onEdit={onEdit}
         onDelete={onDelete}
         style={{
           transform: CSS.Transform.toString(transform),
@@ -39,7 +39,7 @@ function SortableRow({ item, onToggle, onDelete }: SortableRowProps) {
   );
 }
 
-export function SortablePlanList({ items, onToggle, onDelete, onReorder }: SortablePlanListProps) {
+export function SortablePlanList({ items, onEdit, onToggle, onDelete, onReorder }: SortablePlanListProps) {
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
   const ids = items.map((item) => item.id);
 
@@ -59,7 +59,7 @@ export function SortablePlanList({ items, onToggle, onDelete, onReorder }: Sorta
       <SortableContext items={ids} strategy={verticalListSortingStrategy}>
         <div className="plan-list">
           {items.map((item) => (
-            <SortableRow key={item.id} item={item} onToggle={onToggle} onDelete={onDelete} />
+            <SortableRow key={item.id} item={item} onEdit={onEdit} onToggle={onToggle} onDelete={onDelete} />
           ))}
         </div>
       </SortableContext>

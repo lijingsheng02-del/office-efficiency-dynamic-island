@@ -8,7 +8,7 @@ const EMPTY_PLAN: DailyPlan = {
   items: [],
 };
 
-type PlanView = 'today' | 'templates';
+type PlanView = 'today' | 'templates' | 'batch';
 type TemplateErrors = {
   name?: string;
   items?: string;
@@ -43,6 +43,10 @@ export function DailyPlanPanel() {
   const [view, setView] = useState<PlanView>('today');
   const [plan, setPlan] = useState<DailyPlan>(EMPTY_PLAN);
   const [loading, setLoading] = useState(true);
+  const [batchText, setBatchText] = useState('');
+  const [creatingBatch, setCreatingBatch] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const [actionMessage, setActionMessage] = useState('');
   const [canRollback, setCanRollback] = useState(false);
   const [rollingBack, setRollingBack] = useState(false);
   const [templates, setTemplates] = useState<DailyPlanTemplate[]>([]);
@@ -113,6 +117,42 @@ export function DailyPlanPanel() {
     });
   };
 
+  const batchLines = batchText.split(/\r\n|[\r\n]/).map((line) => line.trim()).filter(Boolean);
+
+  const createBatch = async () => {
+    if (creatingBatch || !batchLines.length) return;
+    setCreatingBatch(true);
+    try {
+      setPlan(normalizePlan(await window.dailyPlanAPI.addPlanItems(batchLines)));
+      setCanRollback(true);
+      setBatchText('');
+      setView('today');
+      setActionMessage(`已添加 ${batchLines.length} 条计划`);
+    } catch {
+      setActionMessage('批量创建失败，请重试。');
+    } finally {
+      setCreatingBatch(false);
+    }
+  };
+
+  const editItem = async (id: string, text: string) => {
+    setPlan(normalizePlan(await window.dailyPlanAPI.editPlanItem(id, text)));
+    setCanRollback(true);
+  };
+
+  const exportTxt = async () => {
+    if (exporting) return;
+    setExporting(true);
+    setActionMessage('');
+    try {
+      if (await window.dailyPlanAPI.exportTxt()) setActionMessage('TXT 已导出');
+    } catch {
+      setActionMessage('导出失败，请重新选择保存位置。');
+    } finally {
+      setExporting(false);
+    }
+  };
+
   const deleteItem = (id: string) => {
     void window.dailyPlanAPI.deletePlanItem(id).then(async (nextPlan) => {
       setPlan(normalizePlan(nextPlan));
@@ -180,6 +220,29 @@ export function DailyPlanPanel() {
     setTemplates(await window.dailyPlanAPI.deleteTemplate(id));
     setTemplateMessage('模板已删除');
   };
+
+  if (view === 'batch') {
+    return (
+      <section className="daily-plan-panel">
+        <header className="plan-panel-header">
+          <div><span className="eyebrow">每日计划</span><strong>批量创建</strong></div>
+          <button type="button" className="plan-rollback-button" disabled={creatingBatch} onClick={() => {
+            setActionMessage('');
+            setView('today');
+          }}>返回</button>
+        </header>
+        <div className="plan-template-editor">
+          <label htmlFor="daily-plan-batch">粘贴计划，每行一条</label>
+          <textarea id="daily-plan-batch" autoFocus value={batchText} disabled={creatingBatch}
+            placeholder={'检查店铺消息\n整理库存清单'} onChange={(event) => setBatchText(event.target.value)} />
+          <button type="button" disabled={creatingBatch || !batchLines.length} onClick={() => void createBatch()}>
+            {creatingBatch ? '正在添加' : `添加到今天（${batchLines.length} 条）`}
+          </button>
+          {actionMessage && <p role="status">{actionMessage}</p>}
+        </div>
+      </section>
+    );
+  }
 
   if (view === 'templates') {
     return (
@@ -277,6 +340,13 @@ export function DailyPlanPanel() {
           <strong>{plan.date || '今天'}</strong>
         </div>
         <div className="plan-header-actions">
+          <button type="button" className="plan-rollback-button" disabled={loading} onClick={() => {
+            setActionMessage('');
+            setView('batch');
+          }}>批量创建</button>
+          <button type="button" className="plan-rollback-button" disabled={loading || exporting} onClick={() => void exportTxt()}>
+            导出 TXT
+          </button>
           <button type="button" className="plan-rollback-button" onClick={() => void rollbackPlan()} disabled={!canRollback || rollingBack}>
             {rollingBack ? '正在撤回' : '撤回结转'}
           </button>
@@ -287,6 +357,7 @@ export function DailyPlanPanel() {
       </header>
 
       <PlanInput onAdd={addItem} />
+      {actionMessage && <span className="plan-action-message" role="status">{actionMessage}</span>}
 
       <button type="button" className="plan-template-entry" onClick={() => setView('templates')}>
         <span>
@@ -307,7 +378,7 @@ export function DailyPlanPanel() {
             <span>添加今天的第一条计划。</span>
           </div>
         ) : (
-          <SortablePlanList items={plan.items} onToggle={toggleItem} onDelete={deleteItem} onReorder={reorderItems} />
+          <SortablePlanList items={plan.items} onEdit={editItem} onToggle={toggleItem} onDelete={deleteItem} onReorder={reorderItems} />
         )}
       </div>
     </section>

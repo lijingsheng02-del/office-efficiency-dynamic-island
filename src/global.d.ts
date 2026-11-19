@@ -235,6 +235,9 @@ declare global {
     dailyPlanAPI: {
       getTodayPlan: () => Promise<DailyPlan>;
       addPlanItem: (text: string) => Promise<DailyPlan>;
+      addPlanItems: (texts: string[]) => Promise<DailyPlan>;
+      editPlanItem: (id: string, text: string) => Promise<DailyPlan>;
+      exportTxt: () => Promise<boolean>;
       togglePlanItem: (id: string) => Promise<DailyPlan>;
       deletePlanItem: (id: string) => Promise<DailyPlan>;
       reorderPlanItems: (ids: string[]) => Promise<DailyPlan>;

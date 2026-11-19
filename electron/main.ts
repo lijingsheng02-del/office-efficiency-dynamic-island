@@ -366,7 +366,7 @@ function startOutsideClickWatcher() {
     const leftDown = isLeftMouseDown();
     const leftPressedNow = leftDown && !outsideClickWasLeftDown;
     outsideClickWasLeftDown = leftDown;
-    if (!leftPressedNow) return;
+    if (!leftPressedNow || nativeDialogOpen) return;
 
     const cursorPoint = screen.getCursorScreenPoint();
     if (!isPointInsideBounds(cursorPoint, mainWindow.getBounds())) {
@@ -1568,6 +1568,37 @@ ipcMain.handle('daily-plan:get-today', () => {
 
 ipcMain.handle('daily-plan:add-item', (_event, text: string) => {
   return getDailyPlanStore().addPlanItem(text);
+});
+
+ipcMain.handle('daily-plan:add-items', (_event, texts: string[]) => {
+  return getDailyPlanStore().addPlanItems(texts);
+});
+
+ipcMain.handle('daily-plan:edit-item', (_event, id: string, text: string) => {
+  return getDailyPlanStore().editPlanItem(id, text);
+});
+
+ipcMain.handle('daily-plan:export-txt', async () => {
+  if (!mainWindow) return false;
+  const plan = getDailyPlanStore().getTodayPlan();
+  nativeDialogOpen = true;
+  try {
+    const result = await dialog.showSaveDialog(mainWindow, {
+      title: '导出每日计划',
+      defaultPath: `每日计划-${plan.date}.txt`,
+      filters: [{ name: '文本文件', extensions: ['txt'] }],
+    });
+    if (result.canceled || !result.filePath) return false;
+    const lines = [
+      `每日计划 ${plan.date}`,
+      '',
+      ...plan.items.map((item) => `[${item.done ? '已完成' : '待完成'}] ${item.text}`),
+    ];
+    await fs.promises.writeFile(result.filePath, '\uFEFF' + lines.join('\r\n') + '\r\n', 'utf8');
+    return true;
+  } finally {
+    nativeDialogOpen = false;
+  }
 });
 
 ipcMain.handle('daily-plan:toggle-item', (_event, id: string) => {
